@@ -1,0 +1,145 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playwrite+SG:wght@400&display=swap");
+:root {
+  color-scheme: dark;
+  --bg: #101313;
+  --panel: #191d1c;
+  --field: #111514;
+  --line: #303835;
+  --text: #f0f4f1;
+  --muted: #a4b1aa;
+  --accent: #68ddb0;
+  --accent-ink: #102d20;
+  --soft: #1b3028;
+  --cyan: #79cbd7;
+  --purple: #b4adf4;
+  --danger: #ffaba9;
+  --warning: #f3d083;
+}
+html[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f5f7f6;
+  --panel: #fff;
+  --field: #f8faf9;
+  --line: #d6dfda;
+  --text: #18251f;
+  --muted: #56685e;
+  --accent: #137653;
+  --accent-ink: #fff;
+  --soft: #e8f5ee;
+  --cyan: #257c8b;
+  --purple: #6d55ad;
+  --danger: #a32935;
+  --warning: #805b0c;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "DM Sans", Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.55;
+  letter-spacing: 0;
+}
+button,
+input,
+select {
+  font: inherit;
+}
+button,
+a,
+input,
+select {
+  touch-action: manipulation;
+}
+button {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+a {
+  color: inherit;
+}
+input,
+select {
+  width: 100%;
+  min-width: 0;
+  color: var(--text);
+  background: var(--field);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 11px 12px;
+}
+input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}
+input[type="range"] {
+  padding: 0;
+  accent-color: var(--accent);
+  height: 24px;
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 4px;
+}
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+h1 {
+  font-size: 32px;
+  line-height: 1.2;
+  font-weight: 600;
+}
+h2 {
+  font-size: 18px;
+  font-weight: 600;
+}
+h3 {
+  font-size: 15px;
+}
+label {
+  display: grid;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 500;
+}
+small {
+  font-size: 12px;
+}
+fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+legend {
+  margin-bottom: 12px;
+}
+button svg {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

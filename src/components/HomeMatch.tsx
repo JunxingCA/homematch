@@ -1,0 +1,1589 @@
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from "react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Building2,
+  Check,
+  CheckCircle2,
+  ChevronRight,
+  ClipboardCheck,
+  FilePenLine,
+  House,
+  Info,
+  Layers,
+  ListFilter,
+  LogOut,
+  MapPin,
+  Moon,
+  Plus,
+  Search,
+  ShieldCheck,
+  SlidersHorizontal,
+  Sun,
+  TrainFront,
+  Trash2,
+  Trees,
+  UserRound,
+  X,
+} from "lucide-react";
+import {
+  categories,
+  confirmedProfileSchema,
+  editDestinationQuery,
+  flatTypes,
+  lifestyleCategories,
+  type Location,
+  type Preference,
+  type Profile,
+} from "@/domain/preferences";
+import { samplePreference } from "@/domain/fixtures";
+import styles from "./HomeMatch.module.css";
+
+const money = (value: number) =>
+  new Intl.NumberFormat("en-SG", {
+    style: "currency",
+    currency: "SGD",
+    maximumFractionDigits: 0,
+  }).format(value);
+const clone = <T,>(value: T): T => structuredClone(value);
+type Viewer = { id: string; email?: string };
+function initialPreference(preview: boolean, locationMode: string): Preference {
+  const value = clone(samplePreference);
+  if (!preview && locationMode === "onemap")
+    value.destinations = [
+      { query: "", location: null, visits: 5, mode: "public" },
+    ];
+  return value;
+}
+type ApiError = {
+  code: string;
+  message: string;
+  fields?: { path: string; message: string }[];
+};
+class RequestError extends Error {
+  constructor(public detail: ApiError) {
+    super(detail.message);
+  }
+}
+async function api<T>(
+  path: string,
+  method = "GET",
+  data?: unknown,
+): Promise<T> {
+  const response = await fetch(path, {
+    method,
+    headers: data ? { "Content-Type": "application/json" } : undefined,
+    body: data ? JSON.stringify(data) : undefined,
+    cache: "no-store",
+  });
+  const result = await response.json();
+  if (!response.ok) throw new RequestError(result.error);
+  return result;
+}
+
+function Section({
+  icon,
+  title,
+  detail,
+  children,
+}: {
+  icon: ReactNode;
+  title: string;
+  detail?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <section className={styles.section}>
+      <div className={styles.sectionHeading}>
+        <div className={styles.sectionTitle}>
+          {icon}
+          <h2>{title}</h2>
+        </div>
+        {detail && <small>{detail}</small>}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+export function HomeMatch({
+  mode,
+  locationMode,
+}: {
+  mode: "preview" | "supabase";
+  locationMode: "fixtures" | "onemap";
+}) {
+  const preview = mode === "preview";
+  const [theme, setTheme] = useState("dark");
+  const [ready, setReady] = useState(false);
+  const [preference, setPreference] = useState<Preference>(() =>
+    initialPreference(preview, locationMode),
+  );
+  const [step, setStep] = useState<"edit" | "review" | "done" | "profiles">(
+    "edit",
+  );
+  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [active, setActive] = useState<Profile | null>(null);
+  const [user, setUser] = useState<Viewer | null>(null);
+  const previousUserId = useRef<string | null>(null);
+  const [authOpen, setAuthOpen] = useState(false);
+  const [authKind, setAuthKind] = useState<"sign-in" | "sign-up">("sign-in");
+  const [authMessage, setAuthMessage] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [fields, setFields] = useState<{ path: string; message: string }[]>([]);
+  const [candidates, setCandidates] = useState<Record<number, Location[]>>({});
+  const [searching, setSearching] = useState<number | null>(null);
+  const [searchError, setSearchError] = useState<Record<number, string>>({});
+  const [deleteTarget, setDeleteTarget] = useState<Profile | null>(null);
+  const [dirty, setDirty] = useState(false);
+  const mainRef = useRef<HTMLElement>(null);
+  const authDialogRef = useRef<HTMLDivElement>(null);
+  const previousFocus = useRef<HTMLElement | null>(null);
+  const requestGeneration = useRef(0);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("homematch-theme");
+    const selected = stored === "light" ? "light" : "dark";
+    document.documentElement.dataset.theme = selected;
+    // Theme is non-sensitive; preferences and identity never enter localStorage.
+    queueMicrotask(() => {
+      setTheme(selected);
+      setReady(true);
+    });
+    if (new URLSearchParams(location.search).has("auth"))
+      queueMicrotask(() =>
+        setError(
+          "The confirmation link expired or was invalid. Please try signing in.",
+        ),
+      );
+    if (!preview) {
+      api<{ user: Viewer }>("/api/auth/session")
+        .then((result) => {
+          previousUserId.current = result.user.id;
+          setUser(result.user);
+        })
+        .catch((e) => {
+          if (e instanceof RequestError && e.detail.code !== "SIGN_IN_REQUIRED")
+            setError(e.message);
+        });
+    }
+  }, [preview]);
+
+  useEffect(() => {
+    if (!user) return;
+    let alive = true;
+    api<{ profiles: Profile[] }>("/api/profiles")
+      .then((result) => {
+        if (alive) setProfiles(result.profiles);
+      })
+      .catch((e) => {
+        if (alive) setError(e.message);
+      });
+    // Only actual interactions cause a throttled activity request; no heartbeat.
+    let lastSent = Date.now();
+    const activity = () => {
+      if (Date.now() - lastSent < 60_000) return;
+      lastSent = Date.now();
+      api("/api/auth/activity", "POST").catch((e) => {
+        if (
+          e instanceof RequestError &&
+          ["SIGN_IN_REQUIRED", "SESSION_EXPIRED"].includes(e.detail.code)
+        ) {
+          setUser(null);
+          setProfiles([]);
+          setAuthOpen(true);
+          setError(e.message);
+        }
+      });
+    };
+    window.addEventListener("pointerdown", activity);
+    window.addEventListener("keydown", activity);
+    return () => {
+      alive = false;
+      window.removeEventListener("pointerdown", activity);
+      window.removeEventListener("keydown", activity);
+    };
+  }, [user]);
+
+  useEffect(() => {
+    if (!authOpen && !deleteTarget) return;
+    previousFocus.current = document.activeElement as HTMLElement;
+    const dialog = authDialogRef.current;
+    const focusable = () =>
+      Array.from(
+        dialog?.querySelectorAll<HTMLElement>(
+          "button:not([disabled]),input,select,a[href]",
+        ) ?? [],
+      );
+    focusable()[0]?.focus();
+    const key = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !busy) {
+        setAuthOpen(false);
+        setDeleteTarget(null);
+      }
+      if (event.key === "Tab") {
+        const elements = focusable();
+        const first = elements[0];
+        const last = elements.at(-1);
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last?.focus();
+        }
+        if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first?.focus();
+        }
+      }
+    };
+    document.addEventListener("keydown", key);
+    return () => {
+      document.removeEventListener("keydown", key);
+      previousFocus.current?.focus();
+    };
+  }, [authOpen, deleteTarget, busy]);
+
+  useEffect(() => {
+    if (!dirty) return;
+    const warn = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [dirty]);
+
+  function fail(e: unknown) {
+    const detail = e instanceof RequestError ? e.detail : null;
+    setError(
+      e instanceof Error
+        ? e.message
+        : "Unable to connect. Your entries are unchanged.",
+    );
+    if (detail?.fields) setFields(detail.fields);
+    if (
+      detail &&
+      ["SIGN_IN_REQUIRED", "SESSION_EXPIRED"].includes(detail.code)
+    ) {
+      setUser(null);
+      setProfiles([]);
+      setAuthOpen(true);
+    }
+  }
+  function update(change: Partial<Preference>) {
+    setPreference((p) => ({ ...p, ...change }));
+    setDirty(true);
+    setFields([]);
+    setError("");
+  }
+  function navigate(next: typeof step) {
+    setStep(next);
+    setError("");
+    setFields([]);
+    mainRef.current?.scrollIntoView({ block: "start" });
+  }
+  function toggleTheme() {
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    document.documentElement.dataset.theme = next;
+    localStorage.setItem("homematch-theme", next);
+  }
+  function editProfile(profile: Profile) {
+    if (dirty && !window.confirm("Discard your unsaved changes?")) return;
+    requestGeneration.current++;
+    setActive(profile);
+    setPreference(clone(profile.preference));
+    setCandidates({});
+    setSearchError({});
+    setDirty(false);
+    navigate("edit");
+  }
+  function newProfile() {
+    if (dirty && !window.confirm("Discard your unsaved changes?")) return;
+    if (!preview && profiles.length >= 4) {
+      setError(
+        "You already have four profiles. Delete one before creating another.",
+      );
+      setStep("profiles");
+      return;
+    }
+    requestGeneration.current++;
+    setActive(null);
+    setPreference(initialPreference(preview, locationMode));
+    setCandidates({});
+    setSearchError({});
+    setDirty(false);
+    navigate("edit");
+  }
+  async function search(index: number) {
+    const query = preference.destinations[index].query;
+    if (query.trim().length < 2) {
+      setSearchError((e) => ({
+        ...e,
+        [index]: "Enter at least two characters.",
+      }));
+      return;
+    }
+    const generation = ++requestGeneration.current;
+    setSearching(index);
+    setSearchError((e) => ({ ...e, [index]: "" }));
+    try {
+      const { locations } = await api<{ locations: Location[] }>(
+        `/api/locations/search?q=${encodeURIComponent(query)}`,
+      );
+      if (generation !== requestGeneration.current) return;
+      setCandidates((c) => ({ ...c, [index]: locations }));
+      if (!locations.length)
+        setSearchError((e) => ({
+          ...e,
+          [index]:
+            preview || locationMode === "fixtures"
+              ? "No preview match. Try Nanyang, Raffles, Tampines or Bishan."
+              : "No locations found. Try a building name or postal code.",
+        }));
+    } catch (e) {
+      if (generation === requestGeneration.current) {
+        setSearchError((v) => ({
+          ...v,
+          [index]:
+            e instanceof Error ? e.message : "Search unavailable. Retry.",
+        }));
+        if (e instanceof RequestError && e.detail.code === "SESSION_EXPIRED")
+          fail(e);
+      }
+    } finally {
+      if (generation === requestGeneration.current) setSearching(null);
+    }
+  }
+  function review(event: FormEvent) {
+    event.preventDefault();
+    const result = confirmedProfileSchema.safeParse(preference);
+    if (!result.success) {
+      setFields(
+        result.error.issues.map((i) => ({
+          path: i.path.join("."),
+          message: i.message,
+        })),
+      );
+      setError("A few preferences need your attention.");
+      mainRef.current?.scrollIntoView();
+      return;
+    }
+    setPreference(result.data);
+    navigate("review");
+  }
+  async function save() {
+    if (preview) {
+      setDirty(false);
+      navigate("done");
+      return;
+    }
+    if (!user) {
+      setAuthOpen(true);
+      return;
+    }
+    setBusy(true);
+    setError("");
+    try {
+      const saved = await api<{ profile: Profile }>(
+        active ? `/api/profiles/${active.id}` : "/api/profiles",
+        active ? "PUT" : "POST",
+        { preference, ...(active ? { revision: active.revision } : {}) },
+      );
+      // Keep the new revision even if confirmation fails; a retry cannot duplicate it.
+      setActive(saved.profile);
+      setProfiles((list) => [
+        saved.profile,
+        ...list.filter((x) => x.id !== saved.profile.id),
+      ]);
+      const confirmed = await api<{ profile: Profile }>(
+        `/api/profiles/${saved.profile.id}/confirm`,
+        "POST",
+        { revision: saved.profile.revision },
+      );
+      setActive(confirmed.profile);
+      setProfiles((list) => [
+        confirmed.profile,
+        ...list.filter((x) => x.id !== confirmed.profile.id),
+      ]);
+      setDirty(false);
+      navigate("done");
+    } catch (e) {
+      fail(e);
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function authenticate(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setBusy(true);
+    setAuthMessage("");
+    const data = new FormData(event.currentTarget);
+    try {
+      const result = await api<{ user?: Viewer; message?: string }>(
+        `/api/auth/${authKind}`,
+        "POST",
+        { email: data.get("email"), password: data.get("password") },
+      );
+      if (result.user) {
+        if (
+          previousUserId.current &&
+          previousUserId.current !== result.user.id
+        ) {
+          setProfiles([]);
+          setActive(null);
+          setPreference(initialPreference(preview, locationMode));
+          setDirty(false);
+          setStep("edit");
+        }
+        previousUserId.current = result.user.id;
+        setUser(result.user);
+        setAuthOpen(false);
+        setError("");
+      } else setAuthMessage(result.message ?? "Check your email.");
+    } catch (e) {
+      setAuthMessage(
+        e instanceof Error ? e.message : "Sign-in unavailable. Retry.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function signOut() {
+    setBusy(true);
+    try {
+      await api("/api/auth/sign-out", "POST");
+      setUser(null);
+      setProfiles([]);
+      setActive(null);
+      previousUserId.current = null;
+      setPreference(initialPreference(preview, locationMode));
+      setDirty(false);
+      navigate("edit");
+    } catch (e) {
+      fail(e);
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function removeProfile() {
+    if (!deleteTarget) return;
+    setBusy(true);
+    try {
+      await api(`/api/profiles/${deleteTarget.id}`, "DELETE", {
+        revision: deleteTarget.revision,
+      });
+      setProfiles((list) => list.filter((x) => x.id !== deleteTarget.id));
+      if (active?.id === deleteTarget.id) setActive(null);
+      setDeleteTarget(null);
+    } catch (e) {
+      setDeleteTarget(null);
+      fail(e);
+    } finally {
+      setBusy(false);
+    }
+  }
+  const total = Object.values(preference.weights).reduce((a, b) => a + b, 0);
+  const existing = preference.category !== "BTO";
+  const privateHousing = ["Condominium", "Private / landed"].includes(
+    preference.category,
+  );
+
+  return (
+    <div className={styles.shell} data-ready={ready}>
+      <header className={styles.header}>
+        <Link href="/" className={styles.brand} aria-label="HomeMatch home">
+          <Image
+            src="/homematch-logo.svg"
+            alt=""
+            width={37}
+            height={44}
+            priority
+          />
+          <span>
+            Home<span>Match</span>
+          </span>
+        </Link>
+        <div className={styles.headerRight}>
+          <span className={styles.badge}>
+            <i />
+            {preview ? "Workspace preview" : "Personal workspace"}
+          </span>
+          <button
+            className={styles.icon}
+            onClick={toggleTheme}
+            title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+            aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+          >
+            {theme === "dark" ? <Sun /> : <Moon />}
+          </button>
+          {user ? (
+            <>
+              <span className={styles.email}>{user.email}</span>
+              <button
+                className={styles.icon}
+                disabled={busy}
+                onClick={signOut}
+                title="Sign out"
+                aria-label="Sign out"
+              >
+                <LogOut />
+              </button>
+            </>
+          ) : (
+            <button
+              className={`${styles.button} ${styles.secondary}`}
+              onClick={() => {
+                setAuthMessage("");
+                setAuthOpen(true);
+              }}
+            >
+              <UserRound />
+              Sign in
+            </button>
+          )}
+        </div>
+      </header>
+      <div className={styles.layout}>
+        <aside className={styles.sidebar} aria-label="Workspace navigation">
+          <div>
+            <div className={styles.eyebrow}>Workspace</div>
+            <button
+              className={`${styles.navItem} ${step !== "profiles" ? styles.navActive : ""}`}
+              onClick={() => navigate("edit")}
+            >
+              <SlidersHorizontal />
+              Preferences
+            </button>
+            <button
+              className={`${styles.navItem} ${step === "profiles" ? styles.navActive : ""}`}
+              onClick={() => navigate("profiles")}
+            >
+              <Layers />
+              My profiles <span>{profiles.length}/4</span>
+            </button>
+          </div>
+          <div className={styles.profileList}>
+            <div className={styles.sideHeading}>
+              <span className={styles.eyebrow}>Your profiles</span>
+              <button
+                className={styles.icon}
+                aria-label="Create a new profile"
+                title="Create a new profile"
+                onClick={newProfile}
+              >
+                <Plus />
+              </button>
+            </div>
+            {profiles.map((p) => (
+              <button
+                className={styles.navItem}
+                key={p.id}
+                onClick={() => editProfile(p)}
+              >
+                <FilePenLine />
+                {p.preference.name}
+              </button>
+            ))}
+            {!profiles.length && (
+              <p className={styles.hint}>
+                {preview
+                  ? "No saved profiles in preview."
+                  : user
+                    ? "Your saved profiles appear here."
+                    : "Sign in to save your preferences."}
+              </p>
+            )}
+          </div>
+          <div className={styles.asideNote}>
+            <ShieldCheck size={21} />
+            <strong>Your places. Your priorities.</strong>
+            <p>
+              Personal preferences stay in your account, never in browser
+              storage.
+            </p>
+          </div>
+        </aside>
+        <main ref={mainRef} className={styles.main}>
+          <div className={styles.topline}>
+            <div>
+              <p className={styles.eyebrow}>Your next chapter / Singapore</p>
+              <h1>
+                {step === "profiles"
+                  ? "Your profiles"
+                  : step === "review"
+                    ? "A little more you."
+                    : step === "done"
+                      ? "Preferences, confirmed."
+                      : "Make room for your life."}
+              </h1>
+              <p className={styles.subtitle}>
+                {step === "profiles"
+                  ? "Different possibilities, thoughtfully kept in one place."
+                  : step === "review"
+                    ? "Check the places and priorities that will shape your search."
+                    : step === "done"
+                      ? preview
+                        ? "Your preview is complete. Nothing has been saved to an account."
+                        : "Your profile is saved and ready for the next stage."
+                      : "Start with the places you go, the things you love, and a budget that fits."}
+              </p>
+            </div>
+            <span className={styles.script}>feel at home.</span>
+          </div>
+          {(preview || locationMode === "fixtures") && (
+            <div className={styles.notice}>
+              <Info />
+              <span>
+                {preview
+                  ? "Preview only. Sample locations; edits stay in this tab and are not saved."
+                  : "Development fixtures. These locations are not live OneMap results."}
+              </span>
+            </div>
+          )}
+          {error && (
+            <div className={styles.error} role="alert">
+              {error}
+              {fields.length > 0 && (
+                <ul>
+                  {fields.map((f, i) => (
+                    <li key={i}>{f.message}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+          {step !== "profiles" && (
+            <div className={styles.steps} aria-label="Profile progress">
+              {["Your preferences", "Review & confirm"].map((label, i) => (
+                <div
+                  key={label}
+                  className={`${styles.step} ${(step === "edit" ? i === 0 : i === 1) ? styles.stepActive : ""}`}
+                  aria-current={
+                    (step === "edit" ? i === 0 : i === 1) ? "step" : undefined
+                  }
+                >
+                  <span className={styles.stepNumber}>{i + 1}</span>
+                  {label}
+                </div>
+              ))}
+            </div>
+          )}
+          {step === "profiles" ? (
+            <>
+              <div className={styles.sectionHeading}>
+                <h2>Saved preferences</h2>
+                <button className={styles.button} onClick={newProfile}>
+                  <Plus />
+                  New profile
+                </button>
+              </div>
+              {!profiles.length ? (
+                <div className={styles.empty}>
+                  <Layers size={30} />
+                  <h2>No saved profiles yet</h2>
+                  <p>
+                    {preview
+                      ? "Sign-in and persistent profiles need a configured Supabase project."
+                      : user
+                        ? "Create your first profile to get started."
+                        : "Sign in to see your profiles."}
+                  </p>
+                </div>
+              ) : (
+                profiles.map((p) => (
+                  <article className={styles.saved} key={p.id}>
+                    <div className={styles.savedTitle}>
+                      <h2>{p.preference.name}</h2>
+                      <span className={styles.badge}>
+                        {p.confirmed ? "Confirmed" : "Draft"}
+                      </span>
+                    </div>
+                    <p className={styles.hint}>
+                      {p.preference.category} · {money(p.preference.budgetMin)}{" "}
+                      - {money(p.preference.budgetMax)}
+                    </p>
+                    <div className={styles.savedActions}>
+                      <button
+                        className={styles.textButton}
+                        onClick={() => editProfile(p)}
+                      >
+                        <FilePenLine />
+                        Edit profile
+                      </button>
+                      <button
+                        className={styles.icon}
+                        aria-label={`Delete ${p.preference.name}`}
+                        title="Delete profile"
+                        onClick={() => setDeleteTarget(p)}
+                      >
+                        <Trash2 />
+                      </button>
+                    </div>
+                  </article>
+                ))
+              )}
+            </>
+          ) : (
+            <div className={styles.content}>
+              <div className={styles.form}>
+                {step === "edit" ? (
+                  <form onSubmit={review} noValidate>
+                    <Section icon={<House />} title="A place to call home">
+                      <div
+                        className={styles.segmented}
+                        role="group"
+                        aria-label="Housing pathway"
+                      >
+                        <button
+                          type="button"
+                          className={`${styles.segment} ${!existing ? styles.selected : ""}`}
+                          aria-pressed={!existing}
+                          onClick={() => update({ category: "BTO" })}
+                        >
+                          <Building2 />
+                          BTO
+                        </button>
+                        <button
+                          type="button"
+                          className={`${styles.segment} ${existing ? styles.selected : ""}`}
+                          aria-pressed={existing}
+                          onClick={() => update({ category: "Resale HDB" })}
+                        >
+                          <House />
+                          Existing homes
+                        </button>
+                      </div>
+                      <div className={styles.grid2}>
+                        <label className={styles.field}>
+                          Profile name
+                          <input
+                            value={preference.name}
+                            maxLength={60}
+                            onChange={(e) => update({ name: e.target.value })}
+                            autoComplete="off"
+                          />
+                        </label>
+                        <label className={styles.field}>
+                          Property type
+                          <select
+                            aria-label="Property type"
+                            value={preference.category}
+                            onChange={(e) =>
+                              update({
+                                category: e.target
+                                  .value as Preference["category"],
+                              })
+                            }
+                          >
+                            {(existing
+                              ? categories.filter((x) => x !== "BTO")
+                              : ["BTO"]
+                            ).map((c) => (
+                              <option key={c}>{c}</option>
+                            ))}
+                          </select>
+                        </label>
+                      </div>
+                      <div className={styles.grid2}>
+                        <label className={styles.field}>
+                          Minimum budget (SGD)
+                          <input
+                            type="number"
+                            min={0}
+                            max={20000000}
+                            step={10000}
+                            value={preference.budgetMin}
+                            onChange={(e) =>
+                              update({ budgetMin: Number(e.target.value) })
+                            }
+                          />
+                        </label>
+                        <label className={styles.field}>
+                          Maximum budget (SGD)
+                          <input
+                            type="number"
+                            min={1}
+                            max={20000000}
+                            step={10000}
+                            value={preference.budgetMax}
+                            onChange={(e) =>
+                              update({ budgetMax: Number(e.target.value) })
+                            }
+                          />
+                        </label>
+                      </div>
+                      <fieldset className={styles.field}>
+                        <legend>HDB comparison flat types</legend>
+                        <div className={styles.checks}>
+                          {flatTypes.map((type) => (
+                            <label key={type} className={styles.check}>
+                              <input
+                                type="checkbox"
+                                checked={preference.flatTypes.includes(type)}
+                                onChange={(e) =>
+                                  update({
+                                    flatTypes: e.target.checked
+                                      ? [...preference.flatTypes, type]
+                                      : preference.flatTypes.filter(
+                                          (x) => x !== type,
+                                        ),
+                                  })
+                                }
+                              />
+                              {type}
+                            </label>
+                          ))}
+                        </div>
+                      </fieldset>
+                      <label>
+                        Transaction lookback
+                        <select
+                          value={preference.lookbackMonths}
+                          onChange={(e) =>
+                            update({ lookbackMonths: Number(e.target.value) })
+                          }
+                        >
+                          {[3, 6, 12, 24, 36, 60].map((m) => (
+                            <option key={m} value={m}>
+                              Last {m} complete months
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      {(!existing || privateHousing) && (
+                        <p className={styles.hint}>
+                          {privateHousing
+                            ? "HDB resale evidence does not measure private-property affordability. Area exploration only."
+                            : "Historical resale evidence is neighborhood context, not BTO project pricing."}
+                        </p>
+                      )}
+                    </Section>
+                    <Section
+                      icon={<MapPin />}
+                      title="The places that matter"
+                      detail={`${preference.destinations.length} of 4`}
+                    >
+                      {preference.destinations.map((d, index) => (
+                        <div className={styles.destination} key={index}>
+                          <div className={styles.destinationHead}>
+                            <b>Destination {index + 1}</b>
+                            <button
+                              type="button"
+                              className={styles.icon}
+                              title="Remove destination"
+                              aria-label={`Remove destination ${index + 1}`}
+                              disabled={preference.destinations.length === 1}
+                              onClick={() => {
+                                requestGeneration.current++;
+                                setCandidates({});
+                                setSearchError({});
+                                setSearching(null);
+                                update({
+                                  destinations: preference.destinations.filter(
+                                    (_, i) => i !== index,
+                                  ),
+                                });
+                              }}
+                            >
+                              <X />
+                            </button>
+                          </div>
+                          <label htmlFor={`place-${index}`} className="sr-only">
+                            Destination {index + 1} location
+                          </label>
+                          <div className={styles.searchRow}>
+                            <input
+                              id={`place-${index}`}
+                              placeholder="Building, MRT station or postal code"
+                              value={d.query}
+                              onChange={(e) => {
+                                requestGeneration.current++;
+                                setSearching(null);
+                                setCandidates((c) => ({ ...c, [index]: [] }));
+                                update({
+                                  destinations: preference.destinations.map(
+                                    (x, i) =>
+                                      i === index
+                                        ? editDestinationQuery(
+                                            x,
+                                            e.target.value,
+                                          )
+                                        : x,
+                                  ),
+                                });
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  e.preventDefault();
+                                  search(index);
+                                }
+                              }}
+                            />
+                            <button
+                              type="button"
+                              className={styles.icon}
+                              disabled={searching !== null}
+                              aria-label={`Search destination ${index + 1}`}
+                              title="Search locations"
+                              onClick={() => search(index)}
+                            >
+                              <Search />
+                            </button>
+                          </div>
+                          {d.location ? (
+                            <div className={styles.resolved}>
+                              <CheckCircle2 />
+                              {d.location.source === "fixture"
+                                ? "Sample location selected"
+                                : "OneMap location selected"}
+                            </div>
+                          ) : (
+                            <p className={styles.hint}>
+                              Search and select a location to confirm it.
+                            </p>
+                          )}
+                          {searchError[index] && (
+                            <p className={styles.hint} role="alert">
+                              {searchError[index]}
+                            </p>
+                          )}
+                          {!!candidates[index]?.length && (
+                            <div
+                              className={styles.results}
+                              aria-label="Location matches"
+                            >
+                              {candidates[index].map((loc) => (
+                                <button
+                                  className={styles.result}
+                                  type="button"
+                                  key={loc.id}
+                                  onClick={() => {
+                                    update({
+                                      destinations: preference.destinations.map(
+                                        (x, i) =>
+                                          i === index
+                                            ? {
+                                                ...x,
+                                                query: loc.label,
+                                                location: loc,
+                                              }
+                                            : x,
+                                      ),
+                                    });
+                                    setCandidates((c) => ({
+                                      ...c,
+                                      [index]: [],
+                                    }));
+                                  }}
+                                >
+                                  <MapPin />
+                                  {loc.label}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                          <div className={styles.grid2}>
+                            <label>
+                              Visits per week
+                              <input
+                                type="number"
+                                min={1}
+                                max={21}
+                                value={d.visits}
+                                onChange={(e) =>
+                                  update({
+                                    destinations: preference.destinations.map(
+                                      (x, i) =>
+                                        i === index
+                                          ? {
+                                              ...x,
+                                              visits: Number(e.target.value),
+                                            }
+                                          : x,
+                                    ),
+                                  })
+                                }
+                              />
+                            </label>
+                            <label>
+                              Travel by
+                              <select
+                                value={d.mode}
+                                onChange={(e) =>
+                                  update({
+                                    destinations: preference.destinations.map(
+                                      (x, i) =>
+                                        i === index
+                                          ? {
+                                              ...x,
+                                              mode: e.target.value as
+                                                "public" | "private",
+                                            }
+                                          : x,
+                                    ),
+                                  })
+                                }
+                              >
+                                <option value="public">Public transport</option>
+                                <option value="private">
+                                  Private transport
+                                </option>
+                              </select>
+                            </label>
+                          </div>
+                        </div>
+                      ))}
+                      <button
+                        className={styles.textButton}
+                        type="button"
+                        disabled={preference.destinations.length >= 4}
+                        onClick={() =>
+                          update({
+                            destinations: [
+                              ...preference.destinations,
+                              {
+                                query: "",
+                                location: null,
+                                visits: 1,
+                                mode: "public",
+                              },
+                            ],
+                          })
+                        }
+                      >
+                        <Plus />
+                        Add a destination
+                      </button>
+                    </Section>
+                    <Section
+                      icon={<Trees />}
+                      title="Life around your home"
+                      detail={`${preference.lifestyles.length} of 6`}
+                    >
+                      {preference.lifestyles.map((l, index) => (
+                        <div className={styles.lifeRow} key={l.category}>
+                          <div className={styles.lifeName}>
+                            <Trees />
+                            {l.category}
+                          </div>
+                          <label>
+                            Radius (m)
+                            <input
+                              aria-label={`${l.category} radius`}
+                              type="number"
+                              min={100}
+                              max={5000}
+                              step={100}
+                              value={l.radius}
+                              onChange={(e) =>
+                                update({
+                                  lifestyles: preference.lifestyles.map(
+                                    (x, i) =>
+                                      i === index
+                                        ? {
+                                            ...x,
+                                            radius: Number(e.target.value),
+                                          }
+                                        : x,
+                                  ),
+                                })
+                              }
+                            />
+                          </label>
+                          <label>
+                            Priority
+                            <select
+                              aria-label={`${l.category} priority`}
+                              value={l.priority}
+                              onChange={(e) =>
+                                update({
+                                  lifestyles: preference.lifestyles.map(
+                                    (x, i) =>
+                                      i === index
+                                        ? {
+                                            ...x,
+                                            priority: Number(e.target.value),
+                                          }
+                                        : x,
+                                  ),
+                                })
+                              }
+                            >
+                              {[1, 2, 3, 4, 5].map((n) => (
+                                <option key={n}>{n}</option>
+                              ))}
+                            </select>
+                          </label>
+                          <button
+                            type="button"
+                            className={styles.icon}
+                            title={`Remove ${l.category}`}
+                            aria-label={`Remove ${l.category}`}
+                            onClick={() =>
+                              update({
+                                lifestyles: preference.lifestyles.filter(
+                                  (_, i) => i !== index,
+                                ),
+                              })
+                            }
+                          >
+                            <X />
+                          </button>
+                        </div>
+                      ))}
+                      {preference.lifestyles.length < 6 && (
+                        <label className={styles.hint}>
+                          Add a lifestyle preference
+                          <select
+                            aria-label="Add a lifestyle preference"
+                            value=""
+                            onChange={(e) => {
+                              if (e.target.value)
+                                update({
+                                  lifestyles: [
+                                    ...preference.lifestyles,
+                                    {
+                                      category: e.target
+                                        .value as Preference["lifestyles"][number]["category"],
+                                      priority: 3,
+                                      radius: 1000,
+                                    },
+                                  ],
+                                });
+                            }}
+                          >
+                            <option value="">
+                              Choose an amenity or interest
+                            </option>
+                            {lifestyleCategories
+                              .filter(
+                                (c) =>
+                                  !preference.lifestyles.some(
+                                    (l) => l.category === c,
+                                  ),
+                              )
+                              .map((c) => (
+                                <option key={c}>{c}</option>
+                              ))}
+                          </select>
+                        </label>
+                      )}
+                    </Section>
+                    <Section
+                      icon={<ListFilter />}
+                      title="What matters most"
+                      detail="Total must be 100%"
+                    >
+                      {(
+                        ["destination", "lifestyle", "affordability"] as const
+                      ).map((key, index) => (
+                        <div className={styles.weight} key={key}>
+                          <label htmlFor={`weight-${key}`}>
+                            {
+                              [
+                                "Your journeys",
+                                "Your lifestyle",
+                                "Your budget",
+                              ][index]
+                            }
+                          </label>
+                          <input
+                            id={`weight-${key}`}
+                            type="range"
+                            min={0}
+                            max={100}
+                            step={5}
+                            value={preference.weights[key]}
+                            onChange={(e) =>
+                              update({
+                                weights: {
+                                  ...preference.weights,
+                                  [key]: Number(e.target.value),
+                                },
+                              })
+                            }
+                          />
+                          <output htmlFor={`weight-${key}`}>
+                            {preference.weights[key]}%
+                          </output>
+                        </div>
+                      ))}
+                      <div className={styles.weightTotal}>
+                        <span>Combined priority</span>
+                        <strong
+                          style={{
+                            color:
+                              total === 100 ? "var(--accent)" : "var(--danger)",
+                          }}
+                        >
+                          {total}%{" "}
+                          {total === 100 ? "/ 100%" : "- adjust to 100%"}
+                        </strong>
+                      </div>
+                    </Section>
+                    <div className={styles.footer}>
+                      <span>
+                        {preview
+                          ? "Preview changes are not saved."
+                          : "Review before saving to your account."}
+                      </span>
+                      <button className={styles.button} type="submit">
+                        Review preferences
+                        <ArrowRight />
+                      </button>
+                    </div>
+                  </form>
+                ) : step === "review" ? (
+                  <>
+                    <Section
+                      icon={<ClipboardCheck />}
+                      title="Your profile, at a glance"
+                      detail={
+                        <button
+                          className={styles.textButton}
+                          onClick={() => navigate("edit")}
+                        >
+                          <FilePenLine />
+                          Edit
+                        </button>
+                      }
+                    >
+                      <dl>
+                        <div className={styles.reviewItem}>
+                          <dt>Profile & housing</dt>
+                          <dd>
+                            {preference.name} · {preference.category}
+                          </dd>
+                        </div>
+                        <div className={styles.reviewItem}>
+                          <dt>Budget & historical evidence</dt>
+                          <dd>
+                            {money(preference.budgetMin)} -{" "}
+                            {money(preference.budgetMax)}
+                            <p>
+                              {preference.flatTypes.join(", ")} ·{" "}
+                              {preference.lookbackMonths} complete months
+                            </p>
+                          </dd>
+                        </div>
+                        <div className={styles.reviewItem}>
+                          <dt>Frequent places</dt>
+                          <dd>
+                            {preference.destinations.map((d, i) => (
+                              <p key={i}>
+                                {d.location?.label} · {d.visits} visits/week ·{" "}
+                                {d.mode === "public" ? "Public" : "Private"}{" "}
+                                transport
+                              </p>
+                            ))}
+                          </dd>
+                        </div>
+                        <div className={styles.reviewItem}>
+                          <dt>Lifestyle</dt>
+                          <dd>
+                            {preference.lifestyles.length
+                              ? preference.lifestyles.map((l) => (
+                                  <p key={l.category}>
+                                    {l.category} · {l.radius} m radius ·
+                                    priority {l.priority}/5
+                                  </p>
+                                ))
+                              : "No lifestyle preferences"}
+                          </dd>
+                        </div>
+                        <div className={styles.reviewItem}>
+                          <dt>Priorities</dt>
+                          <dd>
+                            Journeys {preference.weights.destination}% ·
+                            Lifestyle {preference.weights.lifestyle}% · Budget{" "}
+                            {preference.weights.affordability}%
+                          </dd>
+                        </div>
+                      </dl>
+                    </Section>
+                    <div className={styles.footer}>
+                      <button
+                        className={`${styles.button} ${styles.secondary}`}
+                        onClick={() => navigate("edit")}
+                      >
+                        <ArrowLeft />
+                        Back
+                      </button>
+                      <button
+                        className={styles.button}
+                        disabled={busy}
+                        onClick={save}
+                      >
+                        {busy
+                          ? "Saving..."
+                          : preview
+                            ? "Confirm preview"
+                            : "Confirm & save"}
+                        <Check />
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className={styles.success}>
+                      <CheckCircle2 size={34} />
+                    </div>
+                    <h2>{preview ? "Preview reviewed" : "Profile saved"}</h2>
+                    <p className={styles.subtitle}>
+                      {preview
+                        ? "This is a reviewed sample, not a stored profile or a recommendation."
+                        : `${preference.name} is confirmed. You can return to it from My profiles.`}
+                    </p>
+                    <p className={styles.hint}>
+                      Area recommendations will be connected in the next
+                      milestone.
+                    </p>
+                    <div className={styles.footer} style={{ marginTop: 28 }}>
+                      <button
+                        className={`${styles.button} ${styles.secondary}`}
+                        onClick={() => navigate("edit")}
+                      >
+                        <FilePenLine />
+                        Edit preferences
+                      </button>
+                      {!preview && (
+                        <button
+                          className={styles.textButton}
+                          onClick={() => navigate("profiles")}
+                        >
+                          My profiles
+                          <ChevronRight />
+                        </button>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+              <aside className={styles.preview} aria-label="Preference summary">
+                <p className={styles.eyebrow}>The bigger picture</p>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
+                    margin: "22px 0",
+                  }}
+                >
+                  <Image
+                    src="/homematch-logo.svg"
+                    alt=""
+                    width={46}
+                    height={55}
+                  />
+                  <div>
+                    <h2 className={styles.summaryTitle}>
+                      {preference.name || "Your next home"}
+                    </h2>
+                    <p className={styles.summaryLabel}>{preference.category}</p>
+                  </div>
+                </div>
+                <div className={styles.summaryRow}>
+                  <span>Budget</span>
+                  <strong>
+                    {money(preference.budgetMin)}
+                    <br />
+                    to {money(preference.budgetMax)}
+                  </strong>
+                </div>
+                <div className={styles.summaryRow}>
+                  <span>Regular places</span>
+                  <strong>
+                    {preference.destinations.length} destination
+                    {preference.destinations.length !== 1 ? "s" : ""}
+                  </strong>
+                </div>
+                <div className={styles.summaryRow}>
+                  <span>Lifestyle</span>
+                  <strong>{preference.lifestyles.length} priorities</strong>
+                </div>
+                <div className={styles.summaryRow}>
+                  <span>Evidence period</span>
+                  <strong>{preference.lookbackMonths} months</strong>
+                </div>
+                <div className={styles.weightBar}>
+                  {[
+                    preference.weights.destination,
+                    preference.weights.lifestyle,
+                    preference.weights.affordability,
+                  ].map((w, i) => (
+                    <span
+                      key={i}
+                      style={{
+                        width: `${w}%`,
+                        background: [
+                          "var(--accent)",
+                          "var(--cyan)",
+                          "var(--purple)",
+                        ][i],
+                      }}
+                    />
+                  ))}
+                </div>
+                <div className={styles.legend}>
+                  {["Journeys", "Lifestyle", "Budget"].map((label, i) => (
+                    <div key={label}>
+                      <i
+                        style={{
+                          background: [
+                            "var(--accent)",
+                            "var(--cyan)",
+                            "var(--purple)",
+                          ][i],
+                        }}
+                      />
+                      {label}
+                    </div>
+                  ))}
+                </div>
+                <p className={styles.disclaimer}>
+                  <TrainFront size={16} />
+                  <br />A home is more than an address.
+                  <br />
+                  Keep your everyday journeys close.
+                </p>
+                <p className={styles.disclaimer}>
+                  Area research only. Not financial, legal, or
+                  housing-eligibility advice.
+                </p>
+              </aside>
+            </div>
+          )}
+        </main>
+      </div>
+      {(authOpen || deleteTarget) && (
+        <div className={styles.overlay}>
+          <div
+            className={styles.dialog}
+            ref={authDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="dialog-title"
+          >
+            <header>
+              <h2 id="dialog-title">
+                {deleteTarget
+                  ? "Delete this profile?"
+                  : authKind === "sign-in"
+                    ? "Welcome home."
+                    : "Create your account"}
+              </h2>
+              <button
+                className={styles.icon}
+                aria-label="Close dialog"
+                disabled={busy}
+                onClick={() => {
+                  setAuthOpen(false);
+                  setDeleteTarget(null);
+                }}
+              >
+                <X />
+              </button>
+            </header>
+            {deleteTarget ? (
+              <>
+                <p>
+                  {deleteTarget.preference.name} will be permanently removed.
+                  This cannot be undone.
+                </p>
+                <button
+                  className={styles.button}
+                  disabled={busy}
+                  onClick={removeProfile}
+                >
+                  {busy ? "Deleting..." : "Delete profile"}
+                  <Trash2 />
+                </button>
+              </>
+            ) : preview ? (
+              <>
+                <p>
+                  Account sign-in is not connected in this preview. Your entries
+                  remain in this tab.
+                </p>
+                <button
+                  className={styles.button}
+                  onClick={() => setAuthOpen(false)}
+                >
+                  Return to preferences
+                  <ArrowRight />
+                </button>
+              </>
+            ) : (
+              <form onSubmit={authenticate}>
+                <label>
+                  Email
+                  <input
+                    type="email"
+                    name="email"
+                    autoComplete="email"
+                    required
+                    maxLength={254}
+                  />
+                </label>
+                <label>
+                  Password
+                  <input
+                    type="password"
+                    name="password"
+                    autoComplete={
+                      authKind === "sign-in"
+                        ? "current-password"
+                        : "new-password"
+                    }
+                    required
+                    minLength={authKind === "sign-up" ? 12 : 1}
+                    maxLength={128}
+                  />
+                </label>
+                {authKind === "sign-up" && (
+                  <p className={styles.hint}>Use at least 12 characters.</p>
+                )}
+                {authMessage && <p role="alert">{authMessage}</p>}
+                <button className={styles.button} type="submit" disabled={busy}>
+                  {busy
+                    ? "Please wait..."
+                    : authKind === "sign-in"
+                      ? "Sign in"
+                      : "Create account"}
+                  <ArrowRight />
+                </button>
+                <div className={styles.dialogBottom}>
+                  <button
+                    type="button"
+                    className={styles.textButton}
+                    disabled={busy}
+                    onClick={() => {
+                      setAuthKind(
+                        authKind === "sign-in" ? "sign-up" : "sign-in",
+                      );
+                      setAuthMessage("");
+                    }}
+                  >
+                    {authKind === "sign-in"
+                      ? "New here? Create an account"
+                      : "Already registered? Sign in"}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
