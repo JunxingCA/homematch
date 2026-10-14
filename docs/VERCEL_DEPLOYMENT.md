@@ -5,7 +5,7 @@
 - Account workspace: `home-match1` (HomeMatch), confirmed Hobby plan.
 - Project: `homematch`, ID `prj_l9mkn8ccRsueCoCm9C53azHmDRiF`.
 - Canonical production target: `https://homematch.unify-x.com`.
-- Original alias: `https://homematch-sandy.vercel.app` (redirect after the custom-domain release).
+- Original alias: `https://homematch-sandy.vercel.app` (verified 307 redirect to the canonical address).
 - Runtime: Node.js 22.x, Next.js, Fluid Compute, one Singapore (`sin1`) region.
 - Existing Cloudflare mockup is unchanged. One DNS-only CNAME was added for the canonical app hostname; unrelated DNS records are untouched.
 
@@ -41,8 +41,32 @@ real private snapshot are not connected. The BTO catalogue is explicitly the
 archived June 2026 exercise, with town proxies rather than project entrances.
 These are not a complete live BTO/private listing feed.
 
-Final GitHub upload, deployment identity and hosted checks are recorded below
-once the release is actually verified.
+### Verified Release
+
+- Private repository: `JunxingCA/homematch`; application commit
+  `68c03d860d7cb5ec24b5e30c0895a28fa9672e6a` pushed without rewriting history.
+- Deployment `dpl_G6C5hLqmm6GvXPXeXn6vKvgjo1By` is READY and promoted.
+  Immutable URL: `https://homematch-f8pua8xxi-home-match1.vercel.app`.
+- Deployment metadata confirms the clean application commit, Node 22.x, Singapore
+  `sin1`, Hobby plan and source public=false. Upload contained 109 files, 551.4 KB;
+  credentials, caches, tests, SQL, scripts and documentation were excluded.
+- Canonical HTTPS home, manifest and service worker return 200. The old stable
+  alias returns 307 to the custom domain; `.env.local` returns 404.
+- Anonymous session/profile/history/shortlist/exploration reads and protected
+  history-delete/market-ranking requests return 401. A foreign-origin mutation
+  returns 403. These checks did not alter any account data.
+- Google initiation returns the exact custom-domain callback, S256 PKCE and
+  Secure/HttpOnly cookies. Apple returns the expected disabled-provider response.
+- Supabase Site URL is saved as `https://homematch.unify-x.com`; reloading the
+  dashboard confirms all nine exact redirect URLs remain configured.
+- Public HTML/JavaScript credential scan: zero configured private-key matches.
+- The custom-domain page is visually verified. Users must sign in once on the new
+  hostname because cookies do not transfer. Fresh authenticated end-to-end
+  acceptance on that hostname remains pending; earlier signed-in checks below
+  were on the original Vercel alias.
+
+The subsequent verification-record update changes documentation only. It does not
+require a new application deployment; production code remains commit `68c03d8`.
 
 ### Advisor Review
 

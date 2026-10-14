@@ -22,7 +22,7 @@ acceptance. See VERCEL_DEPLOYMENT.md for the actual production release.
 - [x] Pass a read-only real-data check of all seven archived BTO projects using the public research snapshot and real OneMap journeys; zero user writes.
 - [x] Record owner-reported manual success for account deletion, password reset and installation, without claiming independently repeated device tests.
 - [x] Prepare TEAM_HANDOVER_LAB3.md with design boundaries, testing/setup steps, demo order, task ownership and exact Lab 3 deliverables.
-- [ ] Complete final private GitHub source push, canonical domain release and hosted smoke checks.
+- [x] Complete private GitHub source push, canonical domain release and hosted smoke checks; application commit `68c03d8`, deployment `dpl_G6C5hLqmm6GvXPXeXn6vKvgjo1By`. Authenticated end-to-end acceptance on the new hostname remains separate.
 - [ ] Obtain URA_ACCESS_KEY, import real private prices and verify district/type/size samples against URA; this external connection is not complete.
 - [ ] Configure Apple Developer/Supabase provider and validate real Apple sign-in; currently deliberately disabled.
 - [ ] Expand BTO beyond the archived June catalogue, verify individual project coordinates and automate launch-source maintenance; not a complete live BTO inventory.

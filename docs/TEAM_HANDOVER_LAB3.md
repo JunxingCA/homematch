@@ -19,7 +19,7 @@ journeys. Government datasets provide price and amenity evidence. Gemini convert
 natural-language descriptions into a draft of structured preferences. A deterministic,
 versioned formula produces the recommendation scores and explanations.
 
-The new local increment adds clearable search history, BTO launch-area price-range
+The new increment, tested locally before deployment, adds clearable search history, BTO launch-area price-range
 ranking, URA-based private-district price ranking, and an Apple OAuth integration.
 Apple is intentionally disabled until the developer account/provider is configured.
 Private ranking cannot return verified prices until the separate URA key/import is
@@ -44,7 +44,7 @@ The project owner reports that password reset, account deletion and installation
 have been manually tested. Device/browser/date details were not supplied; this is
 recorded as user acceptance, not an independently repeated automated result.
 
-## New Local Work
+## Latest Increment
 
 - Clear recent searches: confirmation, retry, account-scoped persistence, empty
   state and cross-tab refresh. Original result evidence remains available to saved
@@ -155,12 +155,24 @@ prototype is permitted, but does not by itself satisfy the report/design items.
 
 ## Release and Acceptance Record
 
-- Baseline before this increment: 370 unit/database checks passed; new history
-  desktop/mobile acceptance checks passed after correcting a test selector.
+- Source is pushed to the private `JunxingCA/homematch` repository. Application
+  commit: `68c03d8`; live app: https://homematch.unify-x.com.
+- 407 unit/database checks, lint, strict types and the final production build pass.
+- 46 desktop/mobile research/account/AI/map/history regressions pass. Production
+  PWA checks: 24 pass, three intentional platform-specific skips.
+- A read-only real-data BTO/OneMap check passes for the seven archived projects.
+- Hosted anonymous/security/OAuth-initiation checks pass at the custom domain.
+  Sign in once there; fresh authenticated end-to-end checks on that hostname
+  remain pending. Earlier signed-in checks used the previous Vercel alias.
 - Password reset, account deletion and installation: owner reports manual success.
 - Additional market/Apple checks and final release details: see the completed
   increment in IMPLEMENTATION_CHECKLIST.md, MARKET_RANKING.md and VERCEL_DEPLOYMENT.md.
 - Remaining provider gates: URA access key/import and Apple Developer configuration.
+- Remaining BTO work: expand beyond the archived June exercise and replace town
+  MRT proxies with verified project locations before claiming project-level routes.
+- Before teammates test: grant the intended teammates access to the private
+  GitHub repository and, while Google OAuth is in testing mode, add their Google
+  accounts to the OAuth test-user list. Neither access change was made automatically.
 
 ## Source References
 

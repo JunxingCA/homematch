@@ -1,10 +1,11 @@
 # HomeMatch
 
 Production custom address: [homematch.unify-x.com](https://homematch.unify-x.com),
-using Cloudflare DNS and Vercel Hobby. The real backend was previously verified at
-homematch-sandy.vercel.app; the canonical-address release is being verified.
+using Cloudflare DNS and Vercel Hobby. The canonical-address release passes hosted
+smoke checks; homematch-sandy.vercel.app redirects to this address.
 Google login, a stored map and live Gemini/OneMap interpretation were checked on
-the hosted backend. Password reset, deletion and installation are owner-tested. See
+the previous hosted address. Sign in once on the new hostname; authenticated
+end-to-end acceptance there remains to be repeated. Password reset, deletion and installation are owner-tested. See
 [VERCEL_DEPLOYMENT.md](docs/VERCEL_DEPLOYMENT.md) for release and rollback details.
 
 Latest local increment: 407 unit/database checks and 46 desktop/mobile browser
