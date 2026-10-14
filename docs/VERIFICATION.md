@@ -1,5 +1,131 @@
 # Milestone 1 Verification
 
+## Testing And Gemini Evaluation, 14 October 2026
+
+- 360 unit/database checks pass, plus 40 desktop/mobile regressions and 24 production
+  PWA checks (three platform-specific skips). Lint, strict types and production build pass.
+- Final real Gemini corpus: eight of eight pass. Earlier runs exposed dropped
+  activities and unsupported MRT warnings; both were corrected without weakening
+  the assertions. Three bounded runs used 24 synthetic API calls, no account writes.
+- Domain coverage: 100% lines/statements/functions, 99.36% branches; scoring is 100%
+  on all metrics and interpretation 98.61% branches. This excludes controllers/UI.
+- Eight preference/AI WCAG-tag scans show zero violations and zero incomplete items,
+  after correcting the progress indicator's semantic role. Manual/whole-app acceptance remains.
+- Local production-preview public HTML handled fifty concurrent requests, zero errors,
+  sample p95 140 ms. This does not test authenticated recommendations/provider load
+  or meet/prove NFR01/NFR02 by itself.
+- Zero production dependency advisories; five existing high-severity development
+  ESLint/glob advisories remain, without a force-fix/framework downgrade.
+- Full evidence and remaining gaps: TESTING_2026-10-14.md. Generated coverage, provider
+  outputs, accessibility scans and load results stay in ignored test-result directories.
+
+## Deployment Hardening Increment, 14 October 2026
+
+- Lint, strict types and 343 unit/database checks pass, including 62 new checks for
+  shared quotas/slots/RPC permissions, crash expiry/fencing, account/global capacity,
+  staged activation, fail-closed admission, body/SDK/provider bounds, cache single-flight,
+  controller cleanup, profile revalidation and asynchronous local-guard races.
+- Isolated PGlite queues fifty different-owner admissions and verifies six AI slots.
+  A separate cache test shares fifty calls through one public snapshot read. These
+  are not hosted multi-connection or fifty-user/five-second network benchmarks.
+- Production build passes, along with 34 desktop/mobile account/map/AI/explorer
+  regressions and 24 production PWA checks (three iOS-prompt-specific skips).
+  The first sandbox browser attempt failed before launching Chromium due to macOS
+  permissions; permitted reruns passed. Client bundles contain no references to
+  the Gemini, service-role or OneMap credential environment keys.
+- After explicit approval, hosted migration 20261014085711_operation_limits was
+  applied and OPERATION_LIMITS_ENABLED=true enabled in the local private environment.
+  The local server was restarted at port 4175. Hosted permission queries verify
+  backend-only table/RPC access; a rolled-back service-role transaction verifies
+  admission, duplicate blocking, release and old-lease fencing. One opt-in real
+  backend-client test also passes, leaving only synthetic limiter telemetry and no
+  active slots. No account/profile/research writes or paid-provider calls occurred.
+  Existing Auth/security-advisor notices are recorded in DEPLOYMENT_HARDENING.md.
+  Production host activation, signed-in acceptance, ingress/Auth abuse controls
+  and actual latency remain deployment work.
+
+## Automatic Refresh Increment, 14 October 2026
+
+- Lint, strict types and 281 unit/database tests pass. Sixty new checks cover token
+  renewal/expiry/concurrency/backoff, complete controlled source collection, shared
+  validation, snapshot immutability, regressions, cancellation, download bounds and locking.
+- Production build passes. Thirty-four account/map/AI/explorer browser checks and
+  24 production PWA checks pass; three iOS-native-prompt cases are intentionally skipped.
+- The client bundle scan finds no ONEMAP_EMAIL, ONEMAP_PASSWORD or service-role key references.
+- A real `--once --dry-run` completes collection and validation across official
+  HDB data, 26 representative MRT origins and all 13 amenity categories: 337 school
+  campuses and 19 known supermarket points. All eight sports categories are included.
+  A candidate snapshot is reported separately; the active snapshot remains
+  b53b1f6c4178d16c8fb601b156e749f5efa467bc41ded259af201e687c4d208a
+  with its original 12 October 2026 retrieval date. No account or snapshot writes occurred.
+- The dry run uses the existing manual OneMap token. After credentials were supplied
+  privately, a separate live check passes a forced fresh credential exchange plus one
+  public NTU landmark search, without a seed token or database writes. Hosted
+  publication and scheduler activation remain acceptance checks. No Linux service,
+  school VM or cloud schedule was installed.
+- No new database schema/permissions or dependencies are introduced. Public school
+  geocode caches and a sanitized local worker status file are the only live-test file writes.
+
+See AUTOMATIC_REFRESH.md and IMPLEMENTATION_CHECKLIST.md.
+
+## PWA Increment, 13 October 2026
+
+- Lint, strict types and 221 unit/database checks pass, including 25 new manifest,
+  icon, worker allowlist, navigation, Auth-token safety and update lifecycle checks.
+- The production build passes, including the manifest and icon assets.
+- 24 production-preview PWA browser checks pass; three native-prompt checks are
+  intentionally skipped on the iOS-guidance profile. Actual worker registration,
+  offline navigation/cache contents and reconnect are exercised in Chromium.
+  Prompt events, standalone detection and waiting updates use controlled fixtures.
+- Tests cover desktop, 360px Android emulation and 390px iPhone user-agent emulation,
+  not real Android/iOS installations. Installation/offline light/dark screenshots
+  were visually inspected. The header remains usable on narrow mobile screens.
+- The existing 34 account/map/AI/explorer, eight preview and eight password-recovery
+  regression checks pass: 74 browser checks total including PWA. No hosted account
+  changes or database migrations were needed.
+- Real device installation, installed Google sign-in, deployed worker updates and
+  deployed cache headers remain acceptance checks, documented in PWA.md.
+
+## Area Exploration Increment, 13 October 2026
+
+- Lint and strict type checking passed; 196 unit/database tests passed.
+- 34 account/map/AI/exploration browser checks passed, including ten new explorer
+  checks. Eight original preview and eight password-recovery checks passed: 50
+  browser checks total on 1440px desktop and 360px mobile.
+- The production build passed with the new /api/exploration endpoint.
+- Desktop/mobile light/dark screenshots were visually inspected. Removed irrelevant
+  profile-progress UI, retained supported OneMap zoom levels, made mobile area
+  markers compact and moved controls clear of them. Both tile themes render.
+- Two read-only opt-in live checks passed: public catalogue/amenity validation and
+  OneMap public-transport routing from the Bedok reference point to a public NTU
+  landmark. No personal profile reads, saved discoveries or account writes occurred.
+- PropertyGuru's keyword and type filters were verified using its actual public
+  controls. HDB's town search produced no portable town URL; links disclose that
+  users must select town/mode on the official portal.
+- Browser account/profile requests remain mocked; a complete hosted explorer flow
+  with an approved disposable BTO/private profile remains an acceptance check.
+  Current project availability and private-property price scoring are not claimed.
+
+See AREA_EXPLORATION.md and IMPLEMENTATION_CHECKLIST.md for scope and remaining work.
+
+## Account Deletion Increment, 13 October 2026
+
+This section supersedes account-deletion deferral in the historical milestone
+report below. Lint and type checking pass; 179 unit/database tests pass. The account,
+map and AI regression suite passes 24 Chromium desktop/mobile checks, including ten
+account-deletion checks with mocked account APIs. Eight preview checks and eight
+password-recovery checks also pass, for 40 browser checks total. The production
+build passes, including the new /api/account route.
+Both themes of the account confirmation dialog were visually inspected without
+clipping or overlap. No real account was deleted. Hosted Auth hard deletion and
+email/reset delivery still require disposable-account smoke tests; see
+ACCOUNT_DELETION.md and PASSWORD_RECOVERY.md.
+
+Map regression testing also identified cached tiles masking simulated outages and
+old loaded tiles clearing a newer tile-error warning. The outage test now requests
+an uncached zoom level, and failed layers retain their warning until a fresh layer
+loads successfully after retry/theme change.
+
 Verified locally on 12 October 2026 (Singapore), Node.js 22.20.0, macOS arm64.
 
 | Check actually run | Result |

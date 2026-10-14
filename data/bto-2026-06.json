@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "kind": "bto",
+  "id": "hdb-bto-2026-06-annex-a-v1",
+  "sourceUrl": "https://www.hdb.gov.sg/-/media/hdb-pulse/news/2026/20260617-HDB-Launches-6952-Flats-Across-7-Projects-in-June-2026-BTO-Sales-Exercise/Annex-A.pdf",
+  "publishedOn": "2026-06-16",
+  "applicationOpens": "2026-06-17",
+  "applicationCloses": "2026-06-24",
+  "launch": "2026-06",
+  "projects": [
+    {
+      "id": "sembawang-portico",
+      "name": "Sembawang Portico",
+      "town": "SEMBAWANG",
+      "classification": "Standard",
+      "waitingMonths": "31",
+      "ranges": [
+        { "flatType": "2-room", "min": 142000, "max": 225000 },
+        { "flatType": "3-room", "min": 250000, "max": 344000 },
+        { "flatType": "4-room", "min": 320000, "max": 437000 },
+        { "flatType": "5-room", "min": 465000, "max": 579000 }
+      ]
+    },
+    {
+      "id": "sembawang-brook",
+      "name": "Sembawang Brook",
+      "town": "SEMBAWANG",
+      "classification": "Standard",
+      "waitingMonths": "33",
+      "ranges": [
+        { "flatType": "2-room", "min": 139000, "max": 218000 },
+        { "flatType": "3-room", "min": 257000, "max": 333000 },
+        { "flatType": "4-room", "min": 302000, "max": 428000 },
+        { "flatType": "5-room", "min": 420000, "max": 571000 }
+      ]
+    },
+    {
+      "id": "woodgrove-acres",
+      "name": "Woodgrove Acres",
+      "town": "WOODLANDS",
+      "classification": "Standard",
+      "waitingMonths": "42",
+      "ranges": [
+        { "flatType": "2-room", "min": 137000, "max": 211000 },
+        { "flatType": "3-room", "min": 260000, "max": 325000 },
+        { "flatType": "4-room", "min": 353000, "max": 437000 },
+        { "flatType": "5-room", "min": 472000, "max": 582000 }
+      ]
+    },
+    {
+      "id": "kebun-baru-ridge",
+      "name": "Kebun Baru Ridge",
+      "town": "ANG MO KIO",
+      "classification": "Plus",
+      "waitingMonths": "37",
+      "ranges": [
+        { "flatType": "3-room", "min": 380000, "max": 492000 },
+        { "flatType": "4-room", "min": 543000, "max": 693000 }
+      ]
+    },
+    {
+      "id": "kebun-baru-breeze",
+      "name": "Kebun Baru Breeze",
+      "town": "ANG MO KIO",
+      "classification": "Plus",
+      "waitingMonths": "52",
+      "ranges": [
+        { "flatType": "2-room", "min": 191000, "max": 349000 },
+        { "flatType": "4-room", "min": 547000, "max": 746000 }
+      ]
+    },
+    {
+      "id": "lakeview-cascadia",
+      "name": "Lakeview Cascadia",
+      "town": "BISHAN",
+      "classification": "Prime",
+      "waitingMonths": "51",
+      "ranges": [
+        { "flatType": "2-room", "min": 216000, "max": 361000 },
+        { "flatType": "4-room", "min": 534000, "max": 742000 }
+      ]
+    },
+    {
+      "id": "berlayar-rise",
+      "name": "Berlayar Rise",
+      "town": "BUKIT MERAH",
+      "classification": "Prime",
+      "waitingMonths": "49/54",
+      "ranges": [
+        { "flatType": "2-room", "min": 247000, "max": 406000 },
+        { "flatType": "3-room", "min": 435000, "max": 591000 },
+        { "flatType": "4-room", "min": 592000, "max": 810000 }
+      ]
+    }
+  ]
+}

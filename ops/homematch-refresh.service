@@ -1,0 +1,20 @@
+[Unit]
+Description=HomeMatch validated public research refresh
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=homematch
+Group=homematch
+WorkingDirectory=/opt/homematch
+EnvironmentFile=/opt/homematch/.env.local
+ExecStart=/usr/bin/node /opt/homematch/scripts/refresh-research.mjs --once
+TimeoutStartSec=30min
+TimeoutStopSec=90s
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/opt/homematch/.cache
+UMask=0077

@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   upsert: vi.fn(),
+  select: vi.fn(),
   token: "test-only-token",
   fetch: vi.fn(),
 }));
@@ -15,11 +16,57 @@ import { OneMapAdapter } from "@/server/adapters/OneMapAdapter";
 beforeEach(() => {
   vi.resetAllMocks();
   mocks.token = "test-only-token";
-  mocks.upsert.mockResolvedValue({ error: null });
+  mocks.upsert.mockImplementation((rows) => {
+    mocks.select.mockResolvedValue({ data: rows, error: null });
+    return { select: mocks.select };
+  });
   vi.stubGlobal("fetch", mocks.fetch);
 });
 afterEach(() => vi.unstubAllGlobals());
 describe("OneMap search adapter", () => {
+  it("preserves bounded quota retry information and makes no automatic retry", async () => {
+    mocks.fetch.mockResolvedValue(
+      new Response("unavailable", {
+        status: 429,
+        headers: { "retry-after": "25" },
+      }),
+    );
+    await expect(new OneMapAdapter().search("test")).rejects.toMatchObject({
+      code: "ONEMAP_RATE_LIMIT",
+      status: 503,
+      retryAfter: 25,
+    });
+    expect(mocks.fetch).toHaveBeenCalledOnce();
+    expect(mocks.upsert).not.toHaveBeenCalled();
+  });
+  it("returns stored coordinate precision rather than the original OneMap numbers", async () => {
+    mocks.fetch.mockResolvedValue(
+      Response.json({
+        results: [
+          {
+            ADDRESS: "TEST MRT",
+            LATITUDE: "1.345678901234567",
+            LONGITUDE: "103.81234567890123",
+          },
+        ],
+      }),
+    );
+    mocks.upsert.mockImplementation((rows) => {
+      mocks.select.mockResolvedValue({
+        data: rows.map((row: object) => ({
+          ...row,
+          latitude: 1.34567890123457,
+          longitude: 103.812345678901,
+        })),
+        error: null,
+      });
+      return { select: mocks.select };
+    });
+    expect((await new OneMapAdapter().search("test"))[0]).toMatchObject({
+      latitude: 1.34567890123457,
+      longitude: 103.812345678901,
+    });
+  });
   it("normalizes verified results and persists the canonical catalog", async () => {
     mocks.fetch.mockResolvedValue(
       Response.json({
@@ -74,7 +121,12 @@ describe("OneMap search adapter", () => {
         results: [{ ADDRESS: "TEST MRT", LATITUDE: "1.3", LONGITUDE: "103.8" }],
       }),
     );
-    mocks.upsert.mockResolvedValue({ error: { message: "database error" } });
+    mocks.upsert.mockReturnValue({
+      select: vi.fn().mockResolvedValue({
+        data: null,
+        error: { message: "database error" },
+      }),
+    });
     await expect(new OneMapAdapter().search("test")).rejects.toMatchObject({
       code: "ONEMAP_UNAVAILABLE",
     });

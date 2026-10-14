@@ -4,6 +4,8 @@ import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { config } from "./config";
 import { AppError } from "./http";
+import { RECOVERY_COOKIE } from "@/domain/recovery";
+import { boundedFetch } from "./boundedFetch";
 
 export async function userClient() {
   const env = config();
@@ -15,6 +17,7 @@ export async function userClient() {
     );
   const jar = await cookies();
   return createServerClient(env.SUPABASE_URL!, env.SUPABASE_PUBLISHABLE_KEY!, {
+    global: { fetch: boundedFetch },
     cookieOptions: {
       httpOnly: true,
       sameSite: "lax",
@@ -31,14 +34,51 @@ export async function userClient() {
   });
 }
 
-// Only fresh-session registration and canonical location ingestion use this client.
+// Recovery uses an isolated client so a link never replaces the browser's session.
+export function recoveryClient() {
+  const env = config();
+  if (env.APP_MODE !== "supabase" || !env.PASSWORD_RECOVERY_ENABLED)
+    throw new AppError(
+      "RECOVERY_NOT_CONFIGURED",
+      "Password recovery is not available yet. Use Google sign-in or contact the team.",
+      503,
+    );
+  return createClient(env.SUPABASE_URL!, env.SUPABASE_PUBLISHABLE_KEY!, {
+    global: { fetch: boundedFetch },
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
+
+// Trusted operations only; account ownership must be verified before use.
 export function adminClient() {
   const env = config();
   if (env.APP_MODE !== "supabase")
     throw new AppError("PREVIEW_ONLY", "Storage is not configured.", 503);
   return createClient(env.SUPABASE_URL!, env.SUPABASE_SERVICE_ROLE_KEY!, {
+    global: { fetch: boundedFetch },
     auth: { persistSession: false, autoRefreshToken: false },
   });
+}
+
+export async function clearAuthenticationCookies() {
+  const env = config();
+  const prefix = `sb-${new URL(env.SUPABASE_URL!).hostname.split(".")[0]}-auth-token`;
+  const jar = await cookies();
+  for (const cookie of jar.getAll()) {
+    if (
+      cookie.name === RECOVERY_COOKIE ||
+      cookie.name === prefix ||
+      cookie.name.startsWith(`${prefix}.`) ||
+      cookie.name.startsWith(`${prefix}-`)
+    )
+      jar.set(cookie.name, "", {
+        path: "/",
+        httpOnly: true,
+        sameSite: "lax",
+        secure: new URL(env.APP_ORIGIN).protocol === "https:",
+        maxAge: 0,
+      });
+  }
 }
 
 export async function requireSession(touch = true) {

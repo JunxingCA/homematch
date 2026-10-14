@@ -1,0 +1,1031 @@
+.results {
+  min-width: 0;
+}
+.mapLegend {
+  position: absolute;
+  top: 70px;
+  left: 334px;
+  right: 408px;
+  z-index: 800;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px 12px;
+  font-size: 10px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel);
+  max-height: 72px;
+  overflow: auto;
+}
+.mapLegend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.workspace .browseStatus {
+  top: 148px;
+}
+@media (max-width: 1050px) {
+  .mapLegend {
+    top: 65px;
+    left: 12px;
+    right: 64px;
+  }
+  .workspace .browseStatus {
+    top: 143px;
+  }
+}
+.mapResults {
+  height: calc(100dvh - 122px);
+  min-height: 420px;
+  display: flex;
+  flex-direction: column;
+}
+.mapResults .toolbar {
+  flex: 0 0 62px;
+  padding: 8px 20px;
+  margin: 0;
+  border-bottom: 1px solid var(--line);
+  flex-wrap: nowrap;
+  gap: 12px;
+}
+.searchTitle {
+  flex: 1;
+  min-width: 0;
+}
+.searchTitle h1 {
+  font-size: 18px;
+  margin: 0;
+}
+.searchTitle span {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-top: 3px;
+}
+.workspace {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+}
+.quickLayers {
+  position: absolute;
+  z-index: 810;
+  top: 16px;
+  left: 334px;
+  right: 408px;
+  display: flex;
+  gap: 4px;
+  padding: 5px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 3px 16px #0003;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.mapResults .quickLayers button {
+  width: 38px;
+  min-width: 38px;
+  height: 38px;
+  min-height: 38px;
+  padding: 7px;
+  border: 0;
+  position: relative;
+  color: var(--muted);
+}
+.mapResults .quickLayers button[aria-pressed="true"] {
+  color: var(--accent);
+  background: var(--soft);
+}
+.quickLayers i {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  border: 1px solid var(--panel);
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+.browseStatus {
+  position: absolute;
+  top: 68px;
+  left: 334px;
+  right: 408px;
+  z-index: 820;
+  font-size: 11px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel);
+  padding: 8px;
+}
+.browseStatus button {
+  font-size: 11px;
+  min-height: 32px;
+}
+.mapResults .layers {
+  width: 310px;
+}
+.dotSwatch {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+  border-radius: 50%;
+}
+.lineSwatch {
+  width: 18px;
+  height: 0;
+  border-top: 3px solid;
+  flex-shrink: 0;
+}
+.ringSwatch {
+  width: 13px;
+  height: 13px;
+  border: 1px dashed;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.destinationLegend {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border-bottom: 1px solid var(--line);
+  padding: 10px 0;
+  font-size: 12px;
+}
+.destinationSwatch {
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 700;
+  color: #231b42;
+}
+.routeLegend {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 5px 0 5px 20px;
+  font-size: 10px;
+  color: var(--muted);
+}
+.routeLegend span:last-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.layers .exploreNote {
+  margin: 0 0 6px;
+  color: var(--accent);
+}
+.exploreRadius select {
+  margin-left: auto;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--panel);
+  color: var(--text);
+  padding: 5px 8px;
+}
+.browseSources {
+  color: var(--muted);
+  font-size: 11px;
+  padding: 8px 0;
+  border-block: 1px solid var(--line);
+}
+.browseSources summary {
+  cursor: pointer;
+}
+@media (max-width: 1050px) {
+  .quickLayers {
+    left: 12px;
+    right: 64px;
+    top: 12px;
+  }
+  .browseStatus {
+    left: 12px;
+    right: 64px;
+    top: 65px;
+  }
+}
+.mapCanvas {
+  position: absolute;
+  inset: 0;
+}
+.mapResults .body {
+  position: absolute;
+  inset: 16px 68px 82px 16px;
+  margin: 0;
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr) 320px;
+  align-items: start;
+  gap: 18px;
+  pointer-events: none;
+}
+.matchTray,
+.mapResults .detail {
+  pointer-events: auto;
+  max-height: 100%;
+  overflow: auto;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  box-shadow: 0 6px 25px #0002;
+  border-radius: 8px;
+  scrollbar-width: thin;
+}
+.matchTray {
+  grid-column: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.mapResults .detail {
+  grid-column: 3;
+  padding: 20px;
+}
+.mapResults .detail h2 {
+  font-size: 24px;
+  margin-bottom: 4px;
+}
+.mapResults .detail h3 {
+  font-size: 14px;
+}
+.mapResults .detail p {
+  line-height: 1.6;
+}
+.mapResults .detail > button {
+  width: 100%;
+  color: var(--accent);
+  margin: 14px 0;
+}
+.trayHeading {
+  padding: 18px 16px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.trayHeading h2 {
+  font-size: 19px;
+  margin: 7px 0;
+}
+.trayHeading p,
+.trayFoot {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.trayFoot {
+  padding: 10px 16px;
+  border-top: 1px solid var(--line);
+  margin-top: auto;
+}
+.filters {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+  display: grid;
+  gap: 10px;
+}
+.townSearch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0 10px;
+}
+.townSearch svg {
+  width: 16px;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.townSearch input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  padding: 10px 0;
+  background: transparent;
+  color: var(--text);
+  font-size: 12px;
+}
+.sort {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.sort select {
+  min-width: 0;
+  flex: 1;
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 7px;
+  font-size: 11px;
+}
+.mapResults .list {
+  max-height: none;
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
+}
+.mapResults .row h3 {
+  font-size: 14px;
+}
+.mapResults .row strong {
+  font-size: 19px;
+}
+.mapResults .row {
+  padding: 16px 12px 10px;
+}
+.mapResults .compare {
+  gap: 6px;
+  padding-left: 42px;
+}
+.mapResults .rank {
+  display: grid;
+  place-items: center;
+  background: var(--soft);
+  border-radius: 4px;
+  height: 24px;
+  align-self: start;
+}
+.filterEmpty {
+  padding: 20px;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.filterEmpty p {
+  margin-bottom: 12px;
+}
+.heroMetrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 16px 0 4px;
+}
+.heroMetrics strong {
+  font-size: 24px;
+  color: var(--accent);
+}
+.heroMetrics small {
+  display: block;
+  font-size: 10px;
+  color: var(--muted);
+  font-weight: 400;
+  margin-top: 4px;
+}
+.mapResults .scores {
+  gap: 8px;
+}
+.mapResults .scores strong {
+  font-size: 17px;
+}
+.mapResults .mapControls {
+  position: absolute;
+  bottom: 28px;
+  left: 16px;
+  z-index: 800;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  padding: 5px;
+  border-radius: 8px;
+  gap: 5px;
+  box-shadow: 0 3px 16px #0002;
+}
+.mapResults .viewButtons {
+  gap: 2px;
+}
+.mapResults .mapControls button {
+  min-height: 36px;
+  border: none;
+}
+.trayTabs {
+  position: absolute;
+  bottom: -54px;
+  left: 316px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  pointer-events: auto;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  padding: 4px;
+  border-radius: 8px;
+  box-shadow: 0 3px 16px #0002;
+}
+.mapResults .trayTabs button {
+  min-height: 36px;
+  border: none;
+  font-size: 12px;
+  padding: 6px 10px;
+}
+.mapResults .trayTabs button[aria-pressed="true"],
+.markerMode button[aria-pressed="true"] {
+  background: var(--soft);
+  color: var(--accent);
+}
+.body[data-collapsed="true"] .matchTray,
+.body[data-collapsed="true"] .detail {
+  display: none;
+}
+.layers {
+  position: absolute;
+  left: 16px;
+  bottom: 82px;
+  z-index: 850;
+  width: 290px;
+  max-width: calc(100% - 32px);
+  max-height: calc(100% - 100px);
+  overflow: auto;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 6px 30px #0004;
+  padding: 14px;
+}
+.layerHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+.layerHeading button {
+  width: 34px;
+  padding: 6px !important;
+  min-height: 34px !important;
+}
+.layers label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 12px;
+}
+.layers label svg {
+  width: 17px;
+  color: var(--accent);
+}
+.layers small {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 10px;
+}
+.layers p {
+  margin: 12px 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+.markerMode {
+  display: flex;
+  gap: 4px;
+}
+.mapResults .markerMode button {
+  font-size: 11px;
+  flex: 1;
+  padding: 7px;
+}
+.comparisonOverlay {
+  position: absolute;
+  inset: 16px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  z-index: 950;
+  padding: 32px 20px 20px;
+  overflow: auto;
+  box-shadow: 0 8px 30px #0004;
+}
+.closeComparison {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 36px;
+  padding: 7px !important;
+  min-height: 36px !important;
+}
+.workspace[data-view="list"] .body {
+  grid-template-columns: minmax(260px, 1fr) minmax(300px, 1fr);
+  gap: 24px;
+  inset: 16px 20px 82px;
+}
+.workspace[data-view="list"] .detail {
+  grid-column: 2;
+}
+@media (max-width: 1050px) {
+  .mapResults .body,
+  .workspace[data-view="list"] .body {
+    display: block;
+    inset: auto 12px 82px;
+    height: 46%;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    box-shadow: 0 6px 25px #0003;
+    overflow: hidden;
+    pointer-events: auto;
+  }
+  .trayTabs {
+    position: relative;
+    bottom: auto;
+    left: auto;
+    height: 44px;
+    border: 0;
+    border-bottom: 1px solid var(--line);
+    box-shadow: none;
+    border-radius: 0;
+  }
+  .trayTabs button:last-child {
+    margin-left: auto;
+  }
+  .matchTray,
+  .mapResults .detail {
+    height: calc(100% - 44px);
+    max-height: none;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .body[data-panel="details"] .matchTray,
+  .body[data-panel="matches"] .detail {
+    display: none;
+  }
+  .mapResults .body[data-collapsed="true"] {
+    height: 44px;
+  }
+  .workspace[data-view="list"] .body {
+    top: 12px;
+    height: auto;
+  }
+  .workspace[data-view="list"] .body[data-collapsed="true"] {
+    top: auto;
+    height: 44px;
+  }
+  .trayHeading {
+    padding: 12px 14px;
+  }
+  .trayHeading h2 {
+    font-size: 16px;
+  }
+  .trayHeading .eyebrow,
+  .trayHeading p,
+  .trayFoot {
+    display: none;
+  }
+  .trayHeading {
+    padding: 8px 14px;
+  }
+  .trayHeading h2 {
+    margin: 0;
+  }
+  .filters {
+    padding: 8px 12px;
+    gap: 5px;
+  }
+  .townSearch input {
+    padding: 8px 0;
+  }
+  .mapResults .list {
+    min-height: 90px;
+  }
+  .mapResults .detail {
+    padding: 14px;
+  }
+  .mapResults .detail h2 {
+    font-size: 20px;
+  }
+  .mapResults .toolbar {
+    padding: 8px 12px;
+  }
+  .mapResults .actions {
+    flex-wrap: nowrap;
+    gap: 4px;
+  }
+  .refreshLabel {
+    display: none;
+  }
+}
+@media (max-width: 650px) {
+  .mapResults {
+    height: calc(100dvh - 112px);
+  }
+  .mapResults .toolbar {
+    flex: 0 0 88px;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    align-content: center;
+  }
+  .mapResults .toolbar > button {
+    order: 2;
+    min-height: 32px;
+    padding: 5px 8px;
+    font-size: 11px;
+  }
+  .searchTitle {
+    flex-basis: 100%;
+  }
+  .searchTitle h1 {
+    font-size: 16px;
+  }
+  .mapResults .actions {
+    order: 3;
+    margin-left: auto;
+  }
+  .mapResults .actions button {
+    min-height: 32px;
+    padding: 5px 8px;
+    font-size: 11px;
+  }
+  .mapResults .mapControls {
+    bottom: 28px;
+    left: 12px;
+  }
+}
+.savedRow {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  border-bottom: 1px solid var(--line);
+  padding: 20px 0;
+  overflow-wrap: anywhere;
+}
+.savedRow h2 {
+  font-size: 20px;
+  margin-bottom: 6px;
+}
+.savedRow p {
+  color: var(--muted);
+  font-size: 12px;
+  margin: 4px 0;
+}
+.results button svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+.results button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.results button,
+.empty button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--text);
+  border-radius: 6px;
+  min-height: 42px;
+  padding: 8px 12px;
+}
+.toolbar,
+.actions,
+.heading,
+.mapControls,
+.viewButtons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.toolbar,
+.heading {
+  justify-content: space-between;
+  margin-bottom: 22px;
+}
+.heading h2 {
+  font-size: 25px;
+  margin: 6px 0;
+}
+.heading p,
+.context {
+  color: var(--muted);
+  font-size: 12px;
+}
+.eyebrow {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 700;
+}
+.count {
+  font-size: 38px;
+  color: var(--accent);
+}
+.context {
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--line);
+}
+.mapControls {
+  padding: 14px 0;
+}
+.mapControls label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+.mapControls svg {
+  width: 16px;
+  height: 16px;
+}
+.viewButtons {
+  margin-right: auto;
+  gap: 4px;
+}
+.viewButtons button[aria-pressed="true"] {
+  background: var(--soft);
+  color: var(--accent);
+}
+.mapWrap {
+  position: relative;
+}
+.map {
+  height: 400px;
+  width: 100%;
+  z-index: 0;
+  background: #e5ece8;
+}
+.recenter {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 1000;
+  background: white !important;
+  color: #1b3327 !important;
+}
+.tileError {
+  position: absolute;
+  bottom: 32px;
+  left: 12px;
+  z-index: 1000;
+  background: var(--panel);
+  padding: 6px 10px;
+  max-width: calc(100% - 24px);
+}
+.body {
+  display: grid;
+  grid-template-columns: minmax(230px, 0.8fr) minmax(0, 1.3fr);
+  gap: 28px;
+  margin-top: 24px;
+}
+.list {
+  max-height: 730px;
+  overflow: auto;
+}
+.list article {
+  border-bottom: 1px solid var(--line);
+  padding: 8px 0;
+}
+.list .active {
+  background: var(--soft);
+}
+.list .row {
+  display: flex;
+  width: 100%;
+  gap: 10px;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  justify-content: start;
+  padding: 12px;
+}
+.row div {
+  flex: 1;
+  min-width: 0;
+}
+.row p {
+  color: var(--muted);
+  font-size: 11px;
+  margin-top: 3px;
+}
+.row strong {
+  color: var(--accent);
+  font-size: 21px;
+}
+.row small {
+  display: block;
+  color: var(--muted);
+  font-size: 10px;
+  text-align: right;
+}
+.rank {
+  color: var(--muted);
+  font-size: 13px;
+  width: 20px;
+  flex-shrink: 0;
+}
+.compare {
+  display: flex;
+  align-items: center;
+  font-size: 11px;
+  color: var(--muted);
+  padding: 0 12px 8px;
+}
+.detail h2 {
+  font-size: 23px;
+  margin: 4px 0 16px;
+}
+.detail h3 {
+  margin: 23px 0 8px;
+}
+.detail p {
+  font-size: 12px;
+  color: var(--muted);
+}
+.scores {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-block: 1px solid var(--line);
+  padding: 14px 0;
+  gap: 12px;
+}
+.scores div {
+  display: grid;
+  gap: 3px;
+}
+.scores span,
+.scores small {
+  color: var(--muted);
+  font-size: 11px;
+}
+.scores strong {
+  font-size: 20px;
+  color: var(--accent);
+  overflow-wrap: anywhere;
+}
+.prices {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 14px 0;
+}
+.prices dt {
+  font-size: 11px;
+  color: var(--muted);
+}
+.quotedRanges {
+  grid-template-columns: 1fr;
+}
+.marketNotice {
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--line);
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.prices dd {
+  margin: 4px 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+.evidence {
+  display: grid;
+  gap: 4px;
+  border-bottom: 1px solid var(--line);
+  padding: 12px 0;
+  overflow-wrap: anywhere;
+}
+.evidence strong {
+  font-size: 12px;
+}
+.evidence span {
+  font-size: 11px;
+  color: var(--muted);
+}
+.origin {
+  font-size: 11px !important;
+}
+.external {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+  text-decoration: none;
+  color: var(--accent);
+  font-size: 12px;
+}
+.external svg {
+  width: 15px;
+  height: 15px;
+}
+.sources,
+.results > details {
+  margin-top: 24px;
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+  color: var(--muted);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.sources summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.sources svg {
+  width: 14px;
+}
+.sources p {
+  margin-top: 10px;
+}
+.loading,
+.empty {
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: 14px;
+  color: var(--muted);
+}
+.loading h2,
+.empty h2 {
+  color: var(--text);
+}
+.spin {
+  animation: spin 1.8s linear infinite;
+  color: var(--accent);
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .spin {
+    animation: none;
+  }
+}
+.tableWrap {
+  overflow: auto;
+  padding: 20px 0;
+}
+.tableWrap table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13px;
+}
+.tableWrap th,
+.tableWrap td {
+  padding: 12px;
+  border-bottom: 1px solid var(--line);
+  min-width: 130px;
+}
+.tableWrap td {
+  color: var(--muted);
+}
+.tableWrap caption {
+  text-align: left;
+  margin-bottom: 15px;
+  color: var(--accent);
+}
+@media (max-width: 800px) {
+  .body {
+    grid-template-columns: 1fr;
+  }
+  .list {
+    max-height: 320px;
+  }
+  .map {
+    height: 320px;
+  }
+  .heading h2 {
+    font-size: 21px;
+  }
+  .toolbar {
+    gap: 8px;
+  }
+  .actions {
+    gap: 6px;
+  }
+  .results button {
+    font-size: 12px;
+  }
+  .prices dd {
+    font-size: 12px;
+  }
+  .scores strong {
+    font-size: 18px;
+  }
+}

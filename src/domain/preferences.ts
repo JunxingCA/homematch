@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { lifestyleCategories } from "./researchSnapshot.mjs";
+export { lifestyleCategories };
 
 export const LIMITS = {
   profiles: 4,
@@ -18,14 +20,6 @@ export const flatTypes = [
   "4-room",
   "5-room",
   "Executive",
-] as const;
-export const lifestyleCategories = [
-  "Badminton",
-  "Parks",
-  "Groceries",
-  "Hawker centres",
-  "Schools",
-  "Healthcare",
 ] as const;
 
 export const locationSchema = z

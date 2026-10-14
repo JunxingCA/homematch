@@ -1,0 +1,339 @@
+.explorer {
+  color: var(--text);
+}
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--line);
+}
+.toolbar h1 {
+  font-size: 18px;
+}
+.toolbar p {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 3px;
+  overflow-wrap: anywhere;
+}
+.explorer button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 8px 10px;
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 12px;
+}
+.explorer button svg {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+}
+.scope {
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--line);
+}
+.scope strong {
+  color: var(--accent);
+  font-size: 12px;
+}
+.scope p {
+  color: var(--muted);
+  font-size: 11px;
+  margin-top: 3px;
+}
+.rankingFilters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 10px 14px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--line);
+}
+.rankingFilters label {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  font-size: 11px;
+  flex: 1 1 130px;
+}
+.rankingFilters input:not([type="checkbox"]),
+.rankingFilters select {
+  width: 100%;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--text);
+  border-radius: 4px;
+  font-size: 12px;
+}
+.rankingFilters .archive {
+  display: flex;
+  align-items: center;
+  flex: 1 1 260px;
+}
+.archive input {
+  accent-color: var(--accent);
+}
+.rankingFilters p {
+  width: 100%;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.rankingFilters button {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.workspace {
+  position: relative;
+  height: calc(100dvh - 244px);
+  min-height: 560px;
+  isolation: isolate;
+}
+.mapCanvas {
+  position: absolute;
+  inset: 0;
+}
+.areaPane,
+.detailPane {
+  position: absolute;
+  top: 14px;
+  bottom: 64px;
+  overflow: auto;
+  padding: 16px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 6px 25px #0002;
+  z-index: 500;
+  scrollbar-width: thin;
+}
+.areaPane {
+  left: 14px;
+  width: 270px;
+}
+.detailPane {
+  right: 68px;
+  width: 320px;
+}
+.areaPane h2,
+.detailPane h2 {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+.detailPane h3 {
+  font-size: 13px;
+  margin: 14px 0 8px;
+}
+.detailPane p {
+  font-size: 12px;
+  margin: 7px 0;
+  overflow-wrap: anywhere;
+}
+.origin,
+.muted {
+  color: var(--muted);
+  font-size: 11px !important;
+  line-height: 1.6;
+}
+.search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0;
+}
+.search svg {
+  width: 17px;
+  flex-shrink: 0;
+  color: var(--muted);
+}
+.search input {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--line);
+  color: var(--text);
+  background: var(--bg);
+  border-radius: 4px;
+  font-size: 12px;
+}
+.towns {
+  display: grid;
+  gap: 6px;
+}
+.towns button {
+  justify-content: flex-start;
+  text-align: left;
+  min-height: 56px;
+  width: 100%;
+}
+.towns button[aria-pressed="true"],
+.controls button[aria-pressed="true"] {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.towns span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.towns small,
+.journeys small,
+.amenity p small {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 10px;
+}
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--line);
+  padding: 9px 0;
+  font-size: 12px;
+}
+.toggle input {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  accent-color: var(--accent);
+}
+.toggle svg {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+}
+.toggle small {
+  margin-left: auto;
+  font-size: 10px;
+  color: var(--muted);
+}
+.radius {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  margin: 10px 0;
+}
+.radius select {
+  width: 100px;
+  margin-left: auto;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 8px;
+  font-size: 12px;
+}
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  font-size: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+.legend span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.legend i,
+.amenity summary i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.amenity {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+.amenity summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 12px;
+}
+.amenity summary small {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 10px;
+}
+.journeys {
+  margin-top: 16px;
+  padding-top: 4px;
+  border-top: 1px solid var(--line);
+}
+.journeys button {
+  width: 100%;
+}
+.controls {
+  position: absolute;
+  bottom: 12px;
+  left: 14px;
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  z-index: 600;
+}
+.state {
+  padding: 30px;
+  min-height: 250px;
+  color: var(--muted);
+}
+.state p {
+  margin-bottom: 14px;
+}
+@media (max-width: 1050px) {
+  .workspace {
+    height: calc(100dvh - 266px);
+    min-height: 520px;
+  }
+  .areaPane,
+  .detailPane {
+    top: auto;
+    bottom: 64px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-height: 44%;
+  }
+  .areaPane[data-active="false"],
+  .detailPane[data-active="false"] {
+    display: none;
+  }
+  .controls {
+    left: 12px;
+  }
+  .toolbar {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+  .toolbar h1 {
+    font-size: 16px;
+  }
+  .toolbar p {
+    font-size: 11px;
+  }
+  .scope {
+    padding: 8px 12px;
+  }
+  .areaPane h2,
+  .detailPane h2 {
+    font-size: 16px;
+  }
+}

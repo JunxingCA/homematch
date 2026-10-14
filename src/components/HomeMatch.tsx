@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   useEffect,
+  useCallback,
   useRef,
   useState,
   type FormEvent,
@@ -35,6 +36,7 @@ import {
   Trees,
   UserRound,
   X,
+  Bookmark,
 } from "lucide-react";
 import {
   categories,
@@ -48,6 +50,20 @@ import {
 } from "@/domain/preferences";
 import { samplePreference } from "@/domain/fixtures";
 import styles from "./HomeMatch.module.css";
+import { RecommendationResults } from "./RecommendationResults";
+import { AreaExplorer } from "./AreaExplorer";
+import type { MarketFilters } from "@/domain/marketEvidence.mjs";
+import { PwaInstallButton } from "./PwaSupport";
+import type { Discovery } from "@/domain/recommendations";
+import type { SavedArea } from "@/domain/shortlist";
+import { Shortlist } from "./Shortlist";
+import { PreferenceInterpretation } from "./PreferenceInterpretation";
+import { amenityPresentation } from "./amenityPresentation";
+import { AccountDialog, type DeletionFeedback } from "./AccountDialog";
+import {
+  draftProposal,
+  type InterpretationResult,
+} from "@/domain/interpretation";
 
 const money = (value: number) =>
   new Intl.NumberFormat("en-SG", {
@@ -119,9 +135,11 @@ function Section({
 export function HomeMatch({
   mode,
   locationMode,
+  appleSignInEnabled = false,
 }: {
   mode: "preview" | "supabase";
   locationMode: "fixtures" | "onemap";
+  appleSignInEnabled?: boolean;
 }) {
   const preview = mode === "preview";
   const [theme, setTheme] = useState("dark");
@@ -129,15 +147,26 @@ export function HomeMatch({
   const [preference, setPreference] = useState<Preference>(() =>
     initialPreference(preview, locationMode),
   );
-  const [step, setStep] = useState<"edit" | "review" | "done" | "profiles">(
-    "edit",
-  );
+  const [step, setStep] = useState<
+    | "edit"
+    | "review"
+    | "done"
+    | "profiles"
+    | "results"
+    | "shortlist"
+    | "explore"
+  >("edit");
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [active, setActive] = useState<Profile | null>(null);
   const [user, setUser] = useState<Viewer | null>(null);
   const previousUserId = useRef<string | null>(null);
   const [authOpen, setAuthOpen] = useState(false);
-  const [authKind, setAuthKind] = useState<"sign-in" | "sign-up">("sign-in");
+  const [accountOpen, setAccountOpen] = useState(false);
+  const [accountMessage, setAccountMessage] = useState("");
+  const [accountWarning, setAccountWarning] = useState(false);
+  const [authKind, setAuthKind] = useState<"sign-in" | "sign-up" | "recover">(
+    "sign-in",
+  );
   const [authMessage, setAuthMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -147,10 +176,114 @@ export function HomeMatch({
   const [searchError, setSearchError] = useState<Record<number, string>>({});
   const [deleteTarget, setDeleteTarget] = useState<Profile | null>(null);
   const [dirty, setDirty] = useState(false);
+  const [interpretationVersion, setInterpretationVersion] = useState(0);
+  const [discovery, setDiscovery] = useState<Discovery | null>(null);
+  const [searchProfile, setSearchProfile] = useState<Profile | null>(null);
+  const [marketFilters, setMarketFilters] = useState<MarketFilters>();
+  const [history, setHistory] = useState<
+    { id: string; createdAt: string; profileName: string }[]
+  >([]);
+  const historyGeneration = useRef(0);
+  const [historyReady, setHistoryReady] = useState(false);
+  const [historyError, setHistoryError] = useState("");
+  const [clearingHistory, setClearingHistory] = useState(false);
+  const loadHistory = useCallback(
+    async (isCurrent: () => boolean = () => true) => {
+      const generation = ++historyGeneration.current;
+      try {
+        const result = await api<{
+          discoveries: { id: string; createdAt: string; profileName: string }[];
+        }>("/api/discoveries");
+        if (generation !== historyGeneration.current || !isCurrent()) return;
+        setHistory(result.discoveries);
+        setHistoryError("");
+      } catch (e) {
+        if (generation === historyGeneration.current && isCurrent())
+          setHistoryError(
+            e instanceof Error ? e.message : "Recent searches are unavailable.",
+          );
+      } finally {
+        if (generation === historyGeneration.current && isCurrent())
+          setHistoryReady(true);
+      }
+    },
+    [],
+  );
+  const discoveryGeneration = useRef(0);
+  const shortlistGeneration = useRef(0);
+  const [savedAreas, setSavedAreas] = useState<SavedArea[]>([]);
+  const [shortlistReady, setShortlistReady] = useState(false);
+  const [shortlistError, setShortlistError] = useState("");
+  const [savingArea, setSavingArea] = useState(false);
+  const [initialArea, setInitialArea] = useState<string>();
+  const [fromShortlist, setFromShortlist] = useState(false);
   const mainRef = useRef<HTMLElement>(null);
   const authDialogRef = useRef<HTMLDivElement>(null);
   const previousFocus = useRef<HTMLElement | null>(null);
   const requestGeneration = useRef(0);
+  const accountGeneration = useRef(0);
+  const accountEvents = useRef<BroadcastChannel | null>(null);
+  const clearAccountWorkspace = useCallback(() => {
+    accountGeneration.current++;
+    requestGeneration.current++;
+    discoveryGeneration.current++;
+    shortlistGeneration.current++;
+    historyGeneration.current++;
+    setDiscovery(null);
+    setHistory([]);
+    setHistoryReady(false);
+    setHistoryError("");
+    setClearingHistory(false);
+    setSearchProfile(null);
+    setMarketFilters(undefined);
+    setSavedAreas([]);
+    setShortlistReady(false);
+    setShortlistError("");
+    setSavingArea(false);
+    setUser(null);
+    setProfiles([]);
+    setActive(null);
+    previousUserId.current = null;
+    setPreference(initialPreference(preview, locationMode));
+    setDirty(false);
+    setCandidates({});
+    setSearchError({});
+    setSearching(null);
+    setFields([]);
+    setInterpretationVersion((version) => version + 1);
+    setInitialArea(undefined);
+    setFromShortlist(false);
+    setDeleteTarget(null);
+    setAccountOpen(false);
+    setStep("edit");
+  }, [preview, locationMode]);
+
+  useEffect(() => {
+    if (!user || typeof BroadcastChannel === "undefined") return;
+    const channel = new BroadcastChannel("homematch-account-events");
+    accountEvents.current = channel;
+    channel.onmessage = (event) => {
+      if (
+        event.data?.type === "history-cleared" &&
+        event.data.userId === user.id
+      ) {
+        setHistory([]);
+        void loadHistory();
+      }
+      if (
+        event.data?.type === "account-deleted" &&
+        event.data.userId === user.id
+      ) {
+        clearAccountWorkspace();
+        setAccountWarning(false);
+        setAccountMessage("Your HomeMatch account was deleted in another tab.");
+      }
+    };
+    return () => {
+      channel.close();
+      if (accountEvents.current === channel) accountEvents.current = null;
+    };
+  }, [user, clearAccountWorkspace, loadHistory]);
 
   useEffect(() => {
     const stored = localStorage.getItem("homematch-theme");
@@ -161,10 +294,26 @@ export function HomeMatch({
       setTheme(selected);
       setReady(true);
     });
-    if (new URLSearchParams(location.search).has("auth"))
+    const authStatus = new URLSearchParams(location.search).get("auth");
+    if (authStatus === "password-reset" || authStatus === "recovery")
+      queueMicrotask(() => {
+        setAuthKind(authStatus === "recovery" ? "recover" : "sign-in");
+        setAuthMessage(
+          authStatus === "password-reset"
+            ? "Your password was reset. Sign in with your new password."
+            : "",
+        );
+        setAuthOpen(true);
+        window.history.replaceState(null, "", "/");
+      });
+    else if (authStatus)
       queueMicrotask(() =>
         setError(
-          "The confirmation link expired or was invalid. Please try signing in.",
+          authStatus === "cancelled"
+            ? "Sign-in was cancelled. You can try again."
+            : authStatus === "oauth-failed"
+              ? "Sign-in could not be completed. Please try again."
+              : "The confirmation link expired or was invalid. Please try signing in.",
         ),
       );
     if (!preview) {
@@ -183,6 +332,22 @@ export function HomeMatch({
   useEffect(() => {
     if (!user) return;
     let alive = true;
+    const savedGeneration = shortlistGeneration.current;
+    api<{ savedAreas: SavedArea[] }>("/api/shortlist")
+      .then((result) => {
+        if (alive && savedGeneration === shortlistGeneration.current) {
+          setSavedAreas(result.savedAreas);
+          setShortlistReady(true);
+          setShortlistError("");
+        }
+      })
+      .catch((e) => {
+        if (alive && savedGeneration === shortlistGeneration.current) {
+          setShortlistError(e.message);
+          setShortlistReady(true);
+        }
+      });
+    void loadHistory(() => alive);
     api<{ profiles: Profile[] }>("/api/profiles")
       .then((result) => {
         if (alive) setProfiles(result.profiles);
@@ -202,6 +367,14 @@ export function HomeMatch({
         ) {
           setUser(null);
           setProfiles([]);
+          shortlistGeneration.current++;
+          setSavedAreas([]);
+          setShortlistReady(false);
+          setSavingArea(false);
+          discoveryGeneration.current++;
+          setDiscovery(null);
+          setHistory([]);
+          setSearchProfile(null);
           setAuthOpen(true);
           setError(e.message);
         }
@@ -214,7 +387,7 @@ export function HomeMatch({
       window.removeEventListener("pointerdown", activity);
       window.removeEventListener("keydown", activity);
     };
-  }, [user]);
+  }, [user, loadHistory]);
 
   useEffect(() => {
     if (!authOpen && !deleteTarget) return;
@@ -276,7 +449,76 @@ export function HomeMatch({
     ) {
       setUser(null);
       setProfiles([]);
+      clearShortlist();
+      discoveryGeneration.current++;
+      setDiscovery(null);
+      setHistory([]);
+      setSearchProfile(null);
       setAuthOpen(true);
+      setBusy(false);
+    }
+  }
+  function clearShortlist() {
+    shortlistGeneration.current++;
+    setSavedAreas([]);
+    setShortlistReady(false);
+    setShortlistError("");
+    setSavingArea(false);
+  }
+  async function reloadShortlist() {
+    const generation = ++shortlistGeneration.current;
+    setShortlistReady(false);
+    setShortlistError("");
+    try {
+      const result = await api<{ savedAreas: SavedArea[] }>("/api/shortlist");
+      if (generation === shortlistGeneration.current)
+        setSavedAreas(result.savedAreas);
+    } catch (e) {
+      if (generation === shortlistGeneration.current) {
+        setShortlistError(e instanceof Error ? e.message : "Please retry.");
+        fail(e);
+      }
+    } finally {
+      if (generation === shortlistGeneration.current) setShortlistReady(true);
+    }
+  }
+  async function removeSavedArea(item: SavedArea) {
+    if (savingArea) return;
+    const generation = shortlistGeneration.current;
+    setSavingArea(true);
+    setError("");
+    try {
+      await api(`/api/shortlist/${item.id}`, "DELETE");
+      if (generation === shortlistGeneration.current)
+        setSavedAreas((items) => items.filter((s) => s.id !== item.id));
+    } catch (e) {
+      if (generation === shortlistGeneration.current) fail(e);
+    } finally {
+      if (generation === shortlistGeneration.current) setSavingArea(false);
+    }
+  }
+  async function toggleSavedArea(areaId: string) {
+    if (!discovery || savingArea || !shortlistReady || shortlistError) return;
+    const existing = savedAreas.find((s) => s.result.area.id === areaId);
+    if (existing) return removeSavedArea(existing);
+    const generation = shortlistGeneration.current;
+    setSavingArea(true);
+    setError("");
+    try {
+      const result = await api<{ savedArea: SavedArea }>(
+        "/api/shortlist",
+        "POST",
+        { discoveryId: discovery.id, areaId },
+      );
+      if (generation === shortlistGeneration.current)
+        setSavedAreas((items) => [
+          result.savedArea,
+          ...items.filter((s) => s.result.area.id !== areaId),
+        ]);
+    } catch (e) {
+      if (generation === shortlistGeneration.current) fail(e);
+    } finally {
+      if (generation === shortlistGeneration.current) setSavingArea(false);
     }
   }
   function update(change: Partial<Preference>) {
@@ -284,6 +526,141 @@ export function HomeMatch({
     setDirty(true);
     setFields([]);
     setError("");
+  }
+  function applyInterpretation(result: InterpretationResult) {
+    requestGeneration.current++;
+    const { preference: proposed } = draftProposal(preference, result.draft);
+    update(proposed);
+    setCandidates({});
+    setSearchError({});
+    setSearching(null);
+    const matches: Record<number, Location[]> = {};
+    const problems: Record<number, string> = {};
+    if (result.draft.destinations !== null)
+      result.locations.forEach((location, i) => {
+        matches[i] = location.candidates;
+        if (location.error) problems[i] = location.error;
+        else if (!location.candidates.length)
+          problems[i] =
+            "No OneMap match. Search another building name or postal code.";
+      });
+    setCandidates(matches);
+    setSearchError(problems);
+  }
+  async function findAreas(profile: Profile, filters?: MarketFilters) {
+    if (
+      dirty &&
+      !window.confirm("Use the saved profile and discard unsaved changes?")
+    )
+      return;
+    const generation = ++discoveryGeneration.current;
+    setInitialArea(undefined);
+    setFromShortlist(false);
+    setSearchProfile(profile);
+    setMarketFilters(filters);
+    setDiscovery(null);
+    if (profile.preference.category !== "Resale HDB" && !filters) {
+      navigate("explore");
+      return;
+    }
+    navigate("results");
+    setBusy(true);
+    try {
+      const result = await api<{ discovery: Discovery }>(
+        filters ? "/api/market-rankings" : "/api/discoveries",
+        "POST",
+        {
+          profileId: profile.id,
+          revision: profile.revision,
+          ...(filters ? { filters } : {}),
+        },
+      );
+      if (generation !== discoveryGeneration.current) return;
+      setDiscovery(result.discovery);
+      historyGeneration.current++;
+      setHistoryReady(true);
+      setHistoryError("");
+      setHistory((list) =>
+        [
+          {
+            id: result.discovery.id,
+            createdAt: result.discovery.createdAt,
+            profileName: result.discovery.preference.name,
+          },
+          ...list,
+        ].slice(0, 10),
+      );
+    } catch (e) {
+      if (generation === discoveryGeneration.current) fail(e);
+    } finally {
+      if (generation === discoveryGeneration.current) setBusy(false);
+    }
+  }
+  async function clearRecentSearches() {
+    if (
+      busy ||
+      clearingHistory ||
+      !user ||
+      !window.confirm(
+        "Clear all recent searches from your history? Saved profiles and saved areas will stay. Stored result evidence is retained for saved areas; this does not delete your account data.",
+      )
+    )
+      return;
+    const generation = accountGeneration.current;
+    historyGeneration.current++;
+    setClearingHistory(true);
+    setHistoryError("");
+    try {
+      await api("/api/discoveries", "DELETE", { confirm: true });
+      if (generation !== accountGeneration.current) return;
+      setHistory([]);
+      setHistoryReady(true);
+      accountEvents.current?.postMessage({
+        type: "history-cleared",
+        userId: user.id,
+      });
+      await loadHistory();
+    } catch (e) {
+      if (generation === accountGeneration.current) {
+        setHistoryError(
+          e instanceof Error
+            ? e.message
+            : "Recent searches could not be cleared.",
+        );
+        if (
+          e instanceof RequestError &&
+          ["SIGN_IN_REQUIRED", "SESSION_EXPIRED"].includes(e.detail.code)
+        )
+          fail(e);
+      }
+    } finally {
+      if (generation === accountGeneration.current) setClearingHistory(false);
+    }
+  }
+  async function openDiscovery(id: string, areaId?: string) {
+    const generation = ++discoveryGeneration.current;
+    navigate("results");
+    setInitialArea(areaId);
+    setFromShortlist(Boolean(areaId));
+    setBusy(true);
+    setDiscovery(null);
+    setSearchProfile(null);
+    try {
+      const result = await api<{ discovery: Discovery }>(
+        `/api/discoveries/${id}`,
+      );
+      if (generation === discoveryGeneration.current) {
+        setDiscovery(result.discovery);
+        setMarketFilters(result.discovery.market?.filters);
+        setSearchProfile(
+          profiles.find((p) => p.id === result.discovery.profileId) ?? null,
+        );
+      }
+    } catch (e) {
+      if (generation === discoveryGeneration.current) fail(e);
+    } finally {
+      if (generation === discoveryGeneration.current) setBusy(false);
+    }
   }
   function navigate(next: typeof step) {
     setStep(next);
@@ -299,6 +676,7 @@ export function HomeMatch({
   }
   function editProfile(profile: Profile) {
     if (dirty && !window.confirm("Discard your unsaved changes?")) return;
+    setInterpretationVersion((v) => v + 1);
     requestGeneration.current++;
     setActive(profile);
     setPreference(clone(profile.preference));
@@ -318,6 +696,7 @@ export function HomeMatch({
     }
     requestGeneration.current++;
     setActive(null);
+    setInterpretationVersion((v) => v + 1);
     setPreference(initialPreference(preview, locationMode));
     setCandidates({});
     setSearchError({});
@@ -393,6 +772,7 @@ export function HomeMatch({
     }
     setBusy(true);
     setError("");
+    const generation = accountGeneration.current;
     try {
       const saved = await api<{ profile: Profile }>(
         active ? `/api/profiles/${active.id}` : "/api/profiles",
@@ -400,6 +780,7 @@ export function HomeMatch({
         { preference, ...(active ? { revision: active.revision } : {}) },
       );
       // Keep the new revision even if confirmation fails; a retry cannot duplicate it.
+      if (generation !== accountGeneration.current) return;
       setActive(saved.profile);
       setProfiles((list) => [
         saved.profile,
@@ -410,6 +791,7 @@ export function HomeMatch({
         "POST",
         { revision: saved.profile.revision },
       );
+      if (generation !== accountGeneration.current) return;
       setActive(confirmed.profile);
       setProfiles((list) => [
         confirmed.profile,
@@ -418,8 +800,31 @@ export function HomeMatch({
       setDirty(false);
       navigate("done");
     } catch (e) {
-      fail(e);
+      if (generation === accountGeneration.current) fail(e);
     } finally {
+      setBusy(false);
+    }
+  }
+  async function authenticateOAuth(provider: "google" | "apple") {
+    if (
+      dirty &&
+      !window.confirm(
+        "Sign-in will leave this page. Unsaved preferences will be lost. Continue?",
+      )
+    )
+      return;
+    setBusy(true);
+    setAuthMessage("");
+    try {
+      const result = await api<{ url: string }>(
+        `/api/auth/${provider}`,
+        "POST",
+      );
+      window.location.assign(result.url);
+    } catch (e) {
+      setAuthMessage(
+        e instanceof Error ? e.message : "Sign-in unavailable. Retry.",
+      );
       setBusy(false);
     }
   }
@@ -432,7 +837,9 @@ export function HomeMatch({
       const result = await api<{ user?: Viewer; message?: string }>(
         `/api/auth/${authKind}`,
         "POST",
-        { email: data.get("email"), password: data.get("password") },
+        authKind === "recover"
+          ? { email: data.get("email") }
+          : { email: data.get("email"), password: data.get("password") },
       );
       if (result.user) {
         if (
@@ -440,10 +847,15 @@ export function HomeMatch({
           previousUserId.current !== result.user.id
         ) {
           setProfiles([]);
+          clearShortlist();
           setActive(null);
           setPreference(initialPreference(preview, locationMode));
           setDirty(false);
           setStep("edit");
+          discoveryGeneration.current++;
+          setDiscovery(null);
+          setHistory([]);
+          setSearchProfile(null);
         }
         previousUserId.current = result.user.id;
         setUser(result.user);
@@ -462,30 +874,86 @@ export function HomeMatch({
     setBusy(true);
     try {
       await api("/api/auth/sign-out", "POST");
-      setUser(null);
-      setProfiles([]);
-      setActive(null);
-      previousUserId.current = null;
-      setPreference(initialPreference(preview, locationMode));
-      setDirty(false);
-      navigate("edit");
+      clearAccountWorkspace();
+      return true;
     } catch (e) {
       fail(e);
+      return false;
     } finally {
       setBusy(false);
+    }
+  }
+  async function deleteAccount(
+    confirmation: string,
+  ): Promise<DeletionFeedback> {
+    const deletingUserId = user?.id;
+    try {
+      const result = await api<{ deleted: boolean }>("/api/account", "DELETE", {
+        confirmation,
+      });
+      if (result.deleted !== true)
+        throw new Error("Unexpected deletion response");
+      try {
+        accountEvents.current?.postMessage({
+          type: "account-deleted",
+          userId: deletingUserId,
+        });
+      } catch {
+        // Cross-tab UI notification must not change a confirmed deletion outcome.
+      }
+      clearAccountWorkspace();
+      setError("");
+      setAuthOpen(false);
+      setAccountWarning(false);
+      setAccountMessage(
+        "Your HomeMatch account and stored research have been deleted.",
+      );
+      return {};
+    } catch (e) {
+      if (
+        e instanceof RequestError &&
+        [
+          "ACCOUNT_REAUTH_REQUIRED",
+          "SESSION_EXPIRED",
+          "SIGN_IN_REQUIRED",
+        ].includes(e.detail.code)
+      )
+        return { error: e.message, reauthenticate: true };
+      if (
+        e instanceof RequestError &&
+        [
+          "VALIDATION",
+          "INVALID_ORIGIN",
+          "PAYLOAD_TOO_LARGE",
+          "ACCOUNT_AUTH_UNAVAILABLE",
+        ].includes(e.detail.code)
+      )
+        return { error: e.message };
+      clearAccountWorkspace();
+      setAuthOpen(false);
+      setAccountWarning(true);
+      setAccountMessage(
+        e instanceof RequestError
+          ? e.message
+          : "Deletion could not be confirmed. Sign in to check your account before retrying.",
+      );
+      return {};
     }
   }
   async function removeProfile() {
     if (!deleteTarget) return;
     setBusy(true);
+    const generation = accountGeneration.current;
     try {
       await api(`/api/profiles/${deleteTarget.id}`, "DELETE", {
         revision: deleteTarget.revision,
       });
+      if (generation !== accountGeneration.current) return;
       setProfiles((list) => list.filter((x) => x.id !== deleteTarget.id));
       if (active?.id === deleteTarget.id) setActive(null);
       setDeleteTarget(null);
     } catch (e) {
+      if (generation !== accountGeneration.current) return;
       setDeleteTarget(null);
       fail(e);
     } finally {
@@ -499,7 +967,10 @@ export function HomeMatch({
   );
 
   return (
-    <div className={styles.shell} data-ready={ready}>
+    <div
+      className={`${styles.shell} ${step === "explore" || (step === "results" && (discovery || busy)) ? styles.mapShell : ""}`}
+      data-ready={ready}
+    >
       <header className={styles.header}>
         <Link href="/" className={styles.brand} aria-label="HomeMatch home">
           <Image
@@ -526,9 +997,24 @@ export function HomeMatch({
           >
             {theme === "dark" ? <Sun /> : <Moon />}
           </button>
+          <PwaInstallButton />
           {user ? (
             <>
               <span className={styles.email}>{user.email}</span>
+              <button
+                className={styles.icon}
+                disabled={busy}
+                title="Account settings"
+                aria-label="Account settings"
+                onClick={() => {
+                  setAuthOpen(false);
+                  setDeleteTarget(null);
+                  setAccountMessage("");
+                  setAccountOpen(true);
+                }}
+              >
+                <UserRound />
+              </button>
               <button
                 className={styles.icon}
                 disabled={busy}
@@ -544,6 +1030,7 @@ export function HomeMatch({
               className={`${styles.button} ${styles.secondary}`}
               onClick={() => {
                 setAuthMessage("");
+                setAuthKind("sign-in");
                 setAuthOpen(true);
               }}
             >
@@ -558,7 +1045,7 @@ export function HomeMatch({
           <div>
             <div className={styles.eyebrow}>Workspace</div>
             <button
-              className={`${styles.navItem} ${step !== "profiles" ? styles.navActive : ""}`}
+              className={`${styles.navItem} ${!["profiles", "shortlist", "results"].includes(step) ? styles.navActive : ""}`}
               onClick={() => navigate("edit")}
             >
               <SlidersHorizontal />
@@ -570,6 +1057,12 @@ export function HomeMatch({
             >
               <Layers />
               My profiles <span>{profiles.length}/4</span>
+            </button>
+            <button
+              className={`${styles.navItem} ${step === "shortlist" ? styles.navActive : ""}`}
+              onClick={() => navigate("shortlist")}
+            >
+              <Bookmark /> Saved areas <span>{savedAreas.length}</span>
             </button>
           </div>
           <div className={styles.profileList}>
@@ -618,24 +1111,32 @@ export function HomeMatch({
             <div>
               <p className={styles.eyebrow}>Your next chapter / Singapore</p>
               <h1>
-                {step === "profiles"
-                  ? "Your profiles"
-                  : step === "review"
-                    ? "A little more you."
-                    : step === "done"
-                      ? "Preferences, confirmed."
-                      : "Make room for your life."}
+                {step === "shortlist"
+                  ? "Your saved areas"
+                  : step === "profiles"
+                    ? "Your profiles"
+                    : step === "results"
+                      ? "Your area matches"
+                      : step === "review"
+                        ? "A little more you."
+                        : step === "done"
+                          ? "Preferences, confirmed."
+                          : "Make room for your life."}
               </h1>
               <p className={styles.subtitle}>
-                {step === "profiles"
-                  ? "Different possibilities, thoughtfully kept in one place."
-                  : step === "review"
-                    ? "Check the places and priorities that will shape your search."
-                    : step === "done"
-                      ? preview
-                        ? "Your preview is complete. Nothing has been saved to an account."
-                        : "Your profile is saved and ready for the next stage."
-                      : "Start with the places you go, the things you love, and a budget that fits."}
+                {step === "shortlist"
+                  ? "Areas worth keeping, with their original research."
+                  : step === "profiles"
+                    ? "Different possibilities, thoughtfully kept in one place."
+                    : step === "results"
+                      ? "Compare the evidence behind your everyday fit."
+                      : step === "review"
+                        ? "Check the places and priorities that will shape your search."
+                        : step === "done"
+                          ? preview
+                            ? "Your preview is complete. Nothing has been saved to an account."
+                            : "Your profile is saved and ready for the next stage."
+                          : "Start with the places you go, the things you love, and a budget that fits."}
               </p>
             </div>
             <span className={styles.script}>feel at home.</span>
@@ -662,23 +1163,84 @@ export function HomeMatch({
               )}
             </div>
           )}
-          {step !== "profiles" && (
-            <div className={styles.steps} aria-label="Profile progress">
-              {["Your preferences", "Review & confirm"].map((label, i) => (
-                <div
-                  key={label}
-                  className={`${styles.step} ${(step === "edit" ? i === 0 : i === 1) ? styles.stepActive : ""}`}
-                  aria-current={
-                    (step === "edit" ? i === 0 : i === 1) ? "step" : undefined
-                  }
-                >
-                  <span className={styles.stepNumber}>{i + 1}</span>
-                  {label}
-                </div>
-              ))}
-            </div>
+          {accountMessage && (
+            <p
+              className={`${styles.accountMessage} ${accountWarning ? styles.accountWarning : ""}`}
+              role={accountWarning ? "alert" : "status"}
+            >
+              {accountMessage}
+            </p>
           )}
-          {step === "profiles" ? (
+          {step !== "profiles" &&
+            step !== "results" &&
+            step !== "explore" &&
+            step !== "shortlist" && (
+              <div
+                className={styles.steps}
+                role="group"
+                aria-label="Profile progress"
+              >
+                {["Your preferences", "Review & confirm"].map((label, i) => (
+                  <div
+                    key={label}
+                    className={`${styles.step} ${(step === "edit" ? i === 0 : i === 1) ? styles.stepActive : ""}`}
+                    aria-current={
+                      (step === "edit" ? i === 0 : i === 1) ? "step" : undefined
+                    }
+                  >
+                    <span className={styles.stepNumber}>{i + 1}</span>
+                    {label}
+                  </div>
+                ))}
+              </div>
+            )}
+          {step === "shortlist" ? (
+            <Shortlist
+              key={user?.id ?? "guest"}
+              items={savedAreas}
+              ready={shortlistReady}
+              error={shortlistError}
+              pending={savingArea}
+              signedIn={Boolean(user)}
+              onReload={reloadShortlist}
+              onRemove={removeSavedArea}
+              onOpen={(item) =>
+                openDiscovery(item.discoveryId, item.result.area.id)
+              }
+              onFind={() => navigate("profiles")}
+              onSignIn={() => setAuthOpen(true)}
+            />
+          ) : step === "explore" && searchProfile ? (
+            <AreaExplorer
+              key={`${searchProfile.id}:${searchProfile.revision}`}
+              profile={searchProfile}
+              theme={theme === "light" ? "light" : "dark"}
+              onBack={() => navigate("profiles")}
+              onRank={(filters) => findAreas(searchProfile, filters)}
+            />
+          ) : step === "results" ? (
+            <RecommendationResults
+              key={`${discovery?.id ?? "loading"}:${initialArea ?? ""}`}
+              discovery={discovery}
+              theme={theme === "light" ? "light" : "dark"}
+              loading={busy}
+              onBack={() => navigate(fromShortlist ? "shortlist" : "profiles")}
+              backLabel={fromShortlist ? "Saved areas" : "My profiles"}
+              initialArea={initialArea}
+              savedAreas={savedAreas}
+              saving={savingArea}
+              shortlistReady={shortlistReady && !shortlistError}
+              onToggleSave={toggleSavedArea}
+              onRetry={() => {
+                if (searchProfile)
+                  findAreas(
+                    searchProfile,
+                    discovery?.market?.filters ?? marketFilters,
+                  );
+                else navigate("profiles");
+              }}
+            />
+          ) : step === "profiles" ? (
             <>
               <div className={styles.sectionHeading}>
                 <h2>Saved preferences</h2>
@@ -715,6 +1277,16 @@ export function HomeMatch({
                     <div className={styles.savedActions}>
                       <button
                         className={styles.textButton}
+                        disabled={!p.confirmed || busy}
+                        onClick={() => findAreas(p)}
+                      >
+                        <Search />{" "}
+                        {p.preference.category === "Resale HDB"
+                          ? "Find matching areas"
+                          : "Explore areas"}
+                      </button>
+                      <button
+                        className={styles.textButton}
                         onClick={() => editProfile(p)}
                       >
                         <FilePenLine />
@@ -732,282 +1304,494 @@ export function HomeMatch({
                   </article>
                 ))
               )}
+              {user && (
+                <section
+                  className={styles.section}
+                  style={{ marginTop: 28 }}
+                  aria-label="Recent area searches"
+                >
+                  <div className={styles.sectionHeading}>
+                    <h2>Recent area searches</h2>
+                    <button
+                      type="button"
+                      className={`${styles.button} ${styles.secondary}`}
+                      disabled={
+                        busy ||
+                        clearingHistory ||
+                        !historyReady ||
+                        !history.length
+                      }
+                      onClick={clearRecentSearches}
+                    >
+                      <Trash2 />
+                      {clearingHistory ? "Clearing…" : "Clear recent searches"}
+                    </button>
+                  </div>
+                  {historyError && (
+                    <p role="alert">
+                      {historyError}{" "}
+                      <button
+                        type="button"
+                        className={styles.textButton}
+                        disabled={clearingHistory}
+                        onClick={() => void loadHistory()}
+                      >
+                        Retry loading history
+                      </button>
+                    </p>
+                  )}
+                  {!historyReady && (
+                    <p role="status">Loading recent searches…</p>
+                  )}
+                  {historyReady && !historyError && !history.length && (
+                    <p role="status">No recent searches.</p>
+                  )}
+                  {history.map((item) => (
+                    <button
+                      key={item.id}
+                      className={styles.navItem}
+                      disabled={busy || clearingHistory}
+                      onClick={() => openDiscovery(item.id)}
+                    >
+                      <MapPin />
+                      <span>
+                        {item.profileName} ·{" "}
+                        {new Date(item.createdAt).toLocaleDateString("en-SG")}
+                      </span>
+                      <ChevronRight />
+                    </button>
+                  ))}
+                </section>
+              )}
             </>
           ) : (
             <div className={styles.content}>
               <div className={styles.form}>
                 {step === "edit" ? (
-                  <form onSubmit={review} noValidate>
-                    <Section icon={<House />} title="A place to call home">
-                      <div
-                        className={styles.segmented}
-                        role="group"
-                        aria-label="Housing pathway"
-                      >
-                        <button
-                          type="button"
-                          className={`${styles.segment} ${!existing ? styles.selected : ""}`}
-                          aria-pressed={!existing}
-                          onClick={() => update({ category: "BTO" })}
+                  <>
+                    <PreferenceInterpretation
+                      key={`${user?.id ?? "guest"}:${active?.id ?? "new"}:${interpretationVersion}`}
+                      base={preference}
+                      signedIn={Boolean(user)}
+                      preview={preview}
+                      onApply={applyInterpretation}
+                      onSignIn={() => setAuthOpen(true)}
+                      onSessionError={(message) =>
+                        fail(
+                          new RequestError({
+                            code: "SESSION_EXPIRED",
+                            message,
+                          }),
+                        )
+                      }
+                    />
+                    <form onSubmit={review} noValidate>
+                      <Section icon={<House />} title="A place to call home">
+                        <div
+                          className={styles.segmented}
+                          role="group"
+                          aria-label="Housing pathway"
                         >
-                          <Building2 />
-                          BTO
-                        </button>
-                        <button
-                          type="button"
-                          className={`${styles.segment} ${existing ? styles.selected : ""}`}
-                          aria-pressed={existing}
-                          onClick={() => update({ category: "Resale HDB" })}
-                        >
-                          <House />
-                          Existing homes
-                        </button>
-                      </div>
-                      <div className={styles.grid2}>
-                        <label className={styles.field}>
-                          Profile name
-                          <input
-                            value={preference.name}
-                            maxLength={60}
-                            onChange={(e) => update({ name: e.target.value })}
-                            autoComplete="off"
-                          />
-                        </label>
-                        <label className={styles.field}>
-                          Property type
+                          <button
+                            type="button"
+                            className={`${styles.segment} ${!existing ? styles.selected : ""}`}
+                            aria-pressed={!existing}
+                            onClick={() => update({ category: "BTO" })}
+                          >
+                            <Building2 />
+                            BTO
+                          </button>
+                          <button
+                            type="button"
+                            className={`${styles.segment} ${existing ? styles.selected : ""}`}
+                            aria-pressed={existing}
+                            onClick={() => update({ category: "Resale HDB" })}
+                          >
+                            <House />
+                            Existing homes
+                          </button>
+                        </div>
+                        <div className={styles.grid2}>
+                          <label className={styles.field}>
+                            Profile name
+                            <input
+                              value={preference.name}
+                              maxLength={60}
+                              onChange={(e) => update({ name: e.target.value })}
+                              autoComplete="off"
+                            />
+                          </label>
+                          <label className={styles.field}>
+                            Property type
+                            <select
+                              aria-label="Property type"
+                              value={preference.category}
+                              onChange={(e) =>
+                                update({
+                                  category: e.target
+                                    .value as Preference["category"],
+                                })
+                              }
+                            >
+                              {(existing
+                                ? categories.filter((x) => x !== "BTO")
+                                : ["BTO"]
+                              ).map((c) => (
+                                <option key={c}>{c}</option>
+                              ))}
+                            </select>
+                          </label>
+                        </div>
+                        <div className={styles.grid2}>
+                          <label className={styles.field}>
+                            Minimum budget (SGD)
+                            <input
+                              type="number"
+                              min={0}
+                              max={20000000}
+                              step={10000}
+                              value={preference.budgetMin}
+                              onChange={(e) =>
+                                update({ budgetMin: Number(e.target.value) })
+                              }
+                            />
+                          </label>
+                          <label className={styles.field}>
+                            Maximum budget (SGD)
+                            <input
+                              type="number"
+                              min={1}
+                              max={20000000}
+                              step={10000}
+                              value={preference.budgetMax}
+                              onChange={(e) =>
+                                update({ budgetMax: Number(e.target.value) })
+                              }
+                            />
+                          </label>
+                        </div>
+                        <fieldset className={styles.field}>
+                          <legend>HDB comparison flat types</legend>
+                          <div className={styles.checks}>
+                            {flatTypes.map((type) => (
+                              <label key={type} className={styles.check}>
+                                <input
+                                  type="checkbox"
+                                  checked={preference.flatTypes.includes(type)}
+                                  onChange={(e) =>
+                                    update({
+                                      flatTypes: e.target.checked
+                                        ? [...preference.flatTypes, type]
+                                        : preference.flatTypes.filter(
+                                            (x) => x !== type,
+                                          ),
+                                    })
+                                  }
+                                />
+                                {type}
+                              </label>
+                            ))}
+                          </div>
+                        </fieldset>
+                        <label>
+                          Transaction lookback
                           <select
-                            aria-label="Property type"
-                            value={preference.category}
+                            value={preference.lookbackMonths}
                             onChange={(e) =>
-                              update({
-                                category: e.target
-                                  .value as Preference["category"],
-                              })
+                              update({ lookbackMonths: Number(e.target.value) })
                             }
                           >
-                            {(existing
-                              ? categories.filter((x) => x !== "BTO")
-                              : ["BTO"]
-                            ).map((c) => (
-                              <option key={c}>{c}</option>
+                            {[3, 6, 12, 24, 36, 60].map((m) => (
+                              <option key={m} value={m}>
+                                Last {m} complete months
+                              </option>
                             ))}
                           </select>
                         </label>
-                      </div>
-                      <div className={styles.grid2}>
-                        <label className={styles.field}>
-                          Minimum budget (SGD)
-                          <input
-                            type="number"
-                            min={0}
-                            max={20000000}
-                            step={10000}
-                            value={preference.budgetMin}
-                            onChange={(e) =>
-                              update({ budgetMin: Number(e.target.value) })
-                            }
-                          />
-                        </label>
-                        <label className={styles.field}>
-                          Maximum budget (SGD)
-                          <input
-                            type="number"
-                            min={1}
-                            max={20000000}
-                            step={10000}
-                            value={preference.budgetMax}
-                            onChange={(e) =>
-                              update({ budgetMax: Number(e.target.value) })
-                            }
-                          />
-                        </label>
-                      </div>
-                      <fieldset className={styles.field}>
-                        <legend>HDB comparison flat types</legend>
-                        <div className={styles.checks}>
-                          {flatTypes.map((type) => (
-                            <label key={type} className={styles.check}>
-                              <input
-                                type="checkbox"
-                                checked={preference.flatTypes.includes(type)}
-                                onChange={(e) =>
+                        {(!existing || privateHousing) && (
+                          <p className={styles.hint}>
+                            {privateHousing
+                              ? "HDB resale evidence does not measure private-property affordability. Area exploration only."
+                              : "Historical resale evidence is neighborhood context, not BTO project pricing."}
+                          </p>
+                        )}
+                      </Section>
+                      <Section
+                        icon={<MapPin />}
+                        title="The places that matter"
+                        detail={`${preference.destinations.length} of 4`}
+                      >
+                        {preference.destinations.map((d, index) => (
+                          <div className={styles.destination} key={index}>
+                            <div className={styles.destinationHead}>
+                              <b>Destination {index + 1}</b>
+                              <button
+                                type="button"
+                                className={styles.icon}
+                                title="Remove destination"
+                                aria-label={`Remove destination ${index + 1}`}
+                                disabled={preference.destinations.length === 1}
+                                onClick={() => {
+                                  requestGeneration.current++;
+                                  setCandidates({});
+                                  setSearchError({});
+                                  setSearching(null);
                                   update({
-                                    flatTypes: e.target.checked
-                                      ? [...preference.flatTypes, type]
-                                      : preference.flatTypes.filter(
-                                          (x) => x !== type,
-                                        ),
-                                  })
-                                }
-                              />
-                              {type}
-                            </label>
-                          ))}
-                        </div>
-                      </fieldset>
-                      <label>
-                        Transaction lookback
-                        <select
-                          value={preference.lookbackMonths}
-                          onChange={(e) =>
-                            update({ lookbackMonths: Number(e.target.value) })
-                          }
-                        >
-                          {[3, 6, 12, 24, 36, 60].map((m) => (
-                            <option key={m} value={m}>
-                              Last {m} complete months
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                      {(!existing || privateHousing) && (
-                        <p className={styles.hint}>
-                          {privateHousing
-                            ? "HDB resale evidence does not measure private-property affordability. Area exploration only."
-                            : "Historical resale evidence is neighborhood context, not BTO project pricing."}
-                        </p>
-                      )}
-                    </Section>
-                    <Section
-                      icon={<MapPin />}
-                      title="The places that matter"
-                      detail={`${preference.destinations.length} of 4`}
-                    >
-                      {preference.destinations.map((d, index) => (
-                        <div className={styles.destination} key={index}>
-                          <div className={styles.destinationHead}>
-                            <b>Destination {index + 1}</b>
-                            <button
-                              type="button"
-                              className={styles.icon}
-                              title="Remove destination"
-                              aria-label={`Remove destination ${index + 1}`}
-                              disabled={preference.destinations.length === 1}
-                              onClick={() => {
-                                requestGeneration.current++;
-                                setCandidates({});
-                                setSearchError({});
-                                setSearching(null);
-                                update({
-                                  destinations: preference.destinations.filter(
-                                    (_, i) => i !== index,
-                                  ),
-                                });
-                              }}
-                            >
-                              <X />
-                            </button>
-                          </div>
-                          <label htmlFor={`place-${index}`} className="sr-only">
-                            Destination {index + 1} location
-                          </label>
-                          <div className={styles.searchRow}>
-                            <input
-                              id={`place-${index}`}
-                              placeholder="Building, MRT station or postal code"
-                              value={d.query}
-                              onChange={(e) => {
-                                requestGeneration.current++;
-                                setSearching(null);
-                                setCandidates((c) => ({ ...c, [index]: [] }));
-                                update({
-                                  destinations: preference.destinations.map(
-                                    (x, i) =>
-                                      i === index
-                                        ? editDestinationQuery(
-                                            x,
-                                            e.target.value,
-                                          )
-                                        : x,
-                                  ),
-                                });
-                              }}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter") {
-                                  e.preventDefault();
-                                  search(index);
-                                }
-                              }}
-                            />
-                            <button
-                              type="button"
-                              className={styles.icon}
-                              disabled={searching !== null}
-                              aria-label={`Search destination ${index + 1}`}
-                              title="Search locations"
-                              onClick={() => search(index)}
-                            >
-                              <Search />
-                            </button>
-                          </div>
-                          {d.location ? (
-                            <div className={styles.resolved}>
-                              <CheckCircle2 />
-                              {d.location.source === "fixture"
-                                ? "Sample location selected"
-                                : "OneMap location selected"}
+                                    destinations:
+                                      preference.destinations.filter(
+                                        (_, i) => i !== index,
+                                      ),
+                                  });
+                                }}
+                              >
+                                <X />
+                              </button>
                             </div>
-                          ) : (
-                            <p className={styles.hint}>
-                              Search and select a location to confirm it.
-                            </p>
-                          )}
-                          {searchError[index] && (
-                            <p className={styles.hint} role="alert">
-                              {searchError[index]}
-                            </p>
-                          )}
-                          {!!candidates[index]?.length && (
-                            <div
-                              className={styles.results}
-                              aria-label="Location matches"
+                            <label
+                              htmlFor={`place-${index}`}
+                              className="sr-only"
                             >
-                              {candidates[index].map((loc) => (
-                                <button
-                                  className={styles.result}
-                                  type="button"
-                                  key={loc.id}
-                                  onClick={() => {
+                              Destination {index + 1} location
+                            </label>
+                            <div className={styles.searchRow}>
+                              <input
+                                id={`place-${index}`}
+                                placeholder="Building, MRT station or postal code"
+                                value={d.query}
+                                onChange={(e) => {
+                                  requestGeneration.current++;
+                                  setSearching(null);
+                                  setCandidates((c) => ({ ...c, [index]: [] }));
+                                  update({
+                                    destinations: preference.destinations.map(
+                                      (x, i) =>
+                                        i === index
+                                          ? editDestinationQuery(
+                                              x,
+                                              e.target.value,
+                                            )
+                                          : x,
+                                    ),
+                                  });
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    e.preventDefault();
+                                    search(index);
+                                  }
+                                }}
+                              />
+                              <button
+                                type="button"
+                                className={styles.icon}
+                                disabled={searching !== null}
+                                aria-label={`Search destination ${index + 1}`}
+                                title="Search locations"
+                                onClick={() => search(index)}
+                              >
+                                <Search />
+                              </button>
+                            </div>
+                            {d.location ? (
+                              <div className={styles.resolved}>
+                                <CheckCircle2 />
+                                {d.location.source === "fixture"
+                                  ? "Sample location selected"
+                                  : "OneMap location selected"}
+                              </div>
+                            ) : (
+                              <p className={styles.hint}>
+                                Search and select a location to confirm it.
+                              </p>
+                            )}
+                            {searchError[index] && (
+                              <p className={styles.hint} role="alert">
+                                {searchError[index]}
+                              </p>
+                            )}
+                            {!!candidates[index]?.length && (
+                              <div
+                                className={styles.results}
+                                aria-label="Location matches"
+                              >
+                                {candidates[index].map((loc) => (
+                                  <button
+                                    className={styles.result}
+                                    type="button"
+                                    key={loc.id}
+                                    onClick={() => {
+                                      update({
+                                        destinations:
+                                          preference.destinations.map((x, i) =>
+                                            i === index
+                                              ? {
+                                                  ...x,
+                                                  query: loc.label,
+                                                  location: loc,
+                                                }
+                                              : x,
+                                          ),
+                                      });
+                                      setCandidates((c) => ({
+                                        ...c,
+                                        [index]: [],
+                                      }));
+                                    }}
+                                  >
+                                    <MapPin />
+                                    {loc.label}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                            <div className={styles.grid2}>
+                              <label>
+                                Visits per week
+                                <input
+                                  type="number"
+                                  min={1}
+                                  max={21}
+                                  value={d.visits}
+                                  onChange={(e) =>
                                     update({
                                       destinations: preference.destinations.map(
                                         (x, i) =>
                                           i === index
                                             ? {
                                                 ...x,
-                                                query: loc.label,
-                                                location: loc,
+                                                visits: Number(e.target.value),
                                               }
                                             : x,
                                       ),
-                                    });
-                                    setCandidates((c) => ({
-                                      ...c,
-                                      [index]: [],
-                                    }));
-                                  }}
+                                    })
+                                  }
+                                />
+                              </label>
+                              <label>
+                                Travel by
+                                <select
+                                  value={d.mode}
+                                  onChange={(e) =>
+                                    update({
+                                      destinations: preference.destinations.map(
+                                        (x, i) =>
+                                          i === index
+                                            ? {
+                                                ...x,
+                                                mode: e.target.value as
+                                                  "public" | "private",
+                                              }
+                                            : x,
+                                      ),
+                                    })
+                                  }
                                 >
-                                  <MapPin />
-                                  {loc.label}
-                                </button>
-                              ))}
+                                  <option value="public">
+                                    Public transport
+                                  </option>
+                                  <option value="private">
+                                    Private transport
+                                  </option>
+                                </select>
+                              </label>
                             </div>
-                          )}
-                          <div className={styles.grid2}>
+                          </div>
+                        ))}
+                        <button
+                          className={styles.textButton}
+                          type="button"
+                          disabled={preference.destinations.length >= 4}
+                          onClick={() =>
+                            update({
+                              destinations: [
+                                ...preference.destinations,
+                                {
+                                  query: "",
+                                  location: null,
+                                  visits: 1,
+                                  mode: "public",
+                                },
+                              ],
+                            })
+                          }
+                        >
+                          <Plus />
+                          Add a destination
+                        </button>
+                      </Section>
+                      <Section
+                        icon={<Trees />}
+                        title="Life around your home"
+                        detail={`${preference.lifestyles.length} of 6`}
+                      >
+                        {preference.lifestyles.some(
+                          (l) =>
+                            ![
+                              "Parks",
+                              "Groceries",
+                              "Hawker centres",
+                              "Schools",
+                              "Healthcare",
+                            ].includes(l.category),
+                        ) && (
+                          <p className={styles.hint}>
+                            Sports data includes private, condominium and school
+                            venues. Public access, memberships and bookings are
+                            not verified; source coordinates are approximate.
+                          </p>
+                        )}
+                        {preference.lifestyles.some(
+                          (l) => l.category === "Groceries",
+                        ) && (
+                          <p className={styles.hint}>
+                            Groceries uses a partial OneMap supermarket
+                            directory. Missing stores can affect rankings; no
+                            match is not proof of no nearby shops.
+                          </p>
+                        )}
+                        {preference.lifestyles.some(
+                          (l) => l.category === "Healthcare",
+                        ) && (
+                          <p className={styles.hint}>
+                            Healthcare currently measures hospital proximity,
+                            not GP or polyclinic access.
+                          </p>
+                        )}
+                        {preference.lifestyles.some(
+                          (l) => l.category === "Schools",
+                        ) && (
+                          <p className={styles.hint}>
+                            Schools uses the MOE school directory. Proximity
+                            does not establish admission eligibility.
+                          </p>
+                        )}
+                        {preference.lifestyles.map((l, index) => (
+                          <div className={styles.lifeRow} key={l.category}>
+                            <div className={styles.lifeName}>
+                              {(() => {
+                                const Icon =
+                                  amenityPresentation[l.category].icon;
+                                return <Icon />;
+                              })()}
+                              {amenityPresentation[l.category].label}
+                            </div>
                             <label>
-                              Visits per week
+                              Radius (m)
                               <input
+                                aria-label={`${l.category} radius`}
                                 type="number"
-                                min={1}
-                                max={21}
-                                value={d.visits}
+                                min={100}
+                                max={5000}
+                                step={100}
+                                value={l.radius}
                                 onChange={(e) =>
                                   update({
-                                    destinations: preference.destinations.map(
+                                    lifestyles: preference.lifestyles.map(
                                       (x, i) =>
                                         i === index
                                           ? {
                                               ...x,
-                                              visits: Number(e.target.value),
+                                              radius: Number(e.target.value),
                                             }
                                           : x,
                                     ),
@@ -1016,233 +1800,153 @@ export function HomeMatch({
                               />
                             </label>
                             <label>
-                              Travel by
+                              Priority
                               <select
-                                value={d.mode}
+                                aria-label={`${l.category} priority`}
+                                value={l.priority}
                                 onChange={(e) =>
                                   update({
-                                    destinations: preference.destinations.map(
+                                    lifestyles: preference.lifestyles.map(
                                       (x, i) =>
                                         i === index
                                           ? {
                                               ...x,
-                                              mode: e.target.value as
-                                                "public" | "private",
+                                              priority: Number(e.target.value),
                                             }
                                           : x,
                                     ),
                                   })
                                 }
                               >
-                                <option value="public">Public transport</option>
-                                <option value="private">
-                                  Private transport
-                                </option>
+                                {[1, 2, 3, 4, 5].map((n) => (
+                                  <option key={n}>{n}</option>
+                                ))}
                               </select>
                             </label>
-                          </div>
-                        </div>
-                      ))}
-                      <button
-                        className={styles.textButton}
-                        type="button"
-                        disabled={preference.destinations.length >= 4}
-                        onClick={() =>
-                          update({
-                            destinations: [
-                              ...preference.destinations,
-                              {
-                                query: "",
-                                location: null,
-                                visits: 1,
-                                mode: "public",
-                              },
-                            ],
-                          })
-                        }
-                      >
-                        <Plus />
-                        Add a destination
-                      </button>
-                    </Section>
-                    <Section
-                      icon={<Trees />}
-                      title="Life around your home"
-                      detail={`${preference.lifestyles.length} of 6`}
-                    >
-                      {preference.lifestyles.map((l, index) => (
-                        <div className={styles.lifeRow} key={l.category}>
-                          <div className={styles.lifeName}>
-                            <Trees />
-                            {l.category}
-                          </div>
-                          <label>
-                            Radius (m)
-                            <input
-                              aria-label={`${l.category} radius`}
-                              type="number"
-                              min={100}
-                              max={5000}
-                              step={100}
-                              value={l.radius}
-                              onChange={(e) =>
+                            <button
+                              type="button"
+                              className={styles.icon}
+                              title={`Remove ${l.category}`}
+                              aria-label={`Remove ${l.category}`}
+                              onClick={() =>
                                 update({
-                                  lifestyles: preference.lifestyles.map(
-                                    (x, i) =>
-                                      i === index
-                                        ? {
-                                            ...x,
-                                            radius: Number(e.target.value),
-                                          }
-                                        : x,
-                                  ),
-                                })
-                              }
-                            />
-                          </label>
-                          <label>
-                            Priority
-                            <select
-                              aria-label={`${l.category} priority`}
-                              value={l.priority}
-                              onChange={(e) =>
-                                update({
-                                  lifestyles: preference.lifestyles.map(
-                                    (x, i) =>
-                                      i === index
-                                        ? {
-                                            ...x,
-                                            priority: Number(e.target.value),
-                                          }
-                                        : x,
+                                  lifestyles: preference.lifestyles.filter(
+                                    (_, i) => i !== index,
                                   ),
                                 })
                               }
                             >
-                              {[1, 2, 3, 4, 5].map((n) => (
-                                <option key={n}>{n}</option>
-                              ))}
+                              <X />
+                            </button>
+                          </div>
+                        ))}
+                        {preference.lifestyles.length < 6 && (
+                          <label className={styles.hint}>
+                            Add a lifestyle preference
+                            <select
+                              aria-label="Add a lifestyle preference"
+                              value=""
+                              onChange={(e) => {
+                                if (e.target.value)
+                                  update({
+                                    lifestyles: [
+                                      ...preference.lifestyles,
+                                      {
+                                        category: e.target
+                                          .value as Preference["lifestyles"][number]["category"],
+                                        priority: 3,
+                                        radius: 1000,
+                                      },
+                                    ],
+                                  });
+                              }}
+                            >
+                              <option value="">
+                                Choose an amenity or interest
+                              </option>
+                              {lifestyleCategories
+                                .filter(
+                                  (c) =>
+                                    !preference.lifestyles.some(
+                                      (l) => l.category === c,
+                                    ),
+                                )
+                                .map((c) => (
+                                  <option key={c} value={c}>
+                                    {amenityPresentation[c].label}
+                                  </option>
+                                ))}
                             </select>
                           </label>
-                          <button
-                            type="button"
-                            className={styles.icon}
-                            title={`Remove ${l.category}`}
-                            aria-label={`Remove ${l.category}`}
-                            onClick={() =>
-                              update({
-                                lifestyles: preference.lifestyles.filter(
-                                  (_, i) => i !== index,
-                                ),
-                              })
-                            }
-                          >
-                            <X />
-                          </button>
-                        </div>
-                      ))}
-                      {preference.lifestyles.length < 6 && (
-                        <label className={styles.hint}>
-                          Add a lifestyle preference
-                          <select
-                            aria-label="Add a lifestyle preference"
-                            value=""
-                            onChange={(e) => {
-                              if (e.target.value)
+                        )}
+                      </Section>
+                      <Section
+                        icon={<ListFilter />}
+                        title="What matters most"
+                        detail="Total must be 100%"
+                      >
+                        {(
+                          ["destination", "lifestyle", "affordability"] as const
+                        ).map((key, index) => (
+                          <div className={styles.weight} key={key}>
+                            <label htmlFor={`weight-${key}`}>
+                              {
+                                [
+                                  "Your journeys",
+                                  "Your lifestyle",
+                                  "Your budget",
+                                ][index]
+                              }
+                            </label>
+                            <input
+                              id={`weight-${key}`}
+                              type="range"
+                              min={0}
+                              max={100}
+                              step={5}
+                              value={preference.weights[key]}
+                              onChange={(e) =>
                                 update({
-                                  lifestyles: [
-                                    ...preference.lifestyles,
-                                    {
-                                      category: e.target
-                                        .value as Preference["lifestyles"][number]["category"],
-                                      priority: 3,
-                                      radius: 1000,
-                                    },
-                                  ],
-                                });
+                                  weights: {
+                                    ...preference.weights,
+                                    [key]: Number(e.target.value),
+                                  },
+                                })
+                              }
+                            />
+                            <output htmlFor={`weight-${key}`}>
+                              {preference.weights[key]}%
+                            </output>
+                          </div>
+                        ))}
+                        <div className={styles.weightTotal}>
+                          <span>Combined priority</span>
+                          <strong
+                            style={{
+                              color:
+                                total === 100
+                                  ? "var(--accent)"
+                                  : "var(--danger)",
                             }}
                           >
-                            <option value="">
-                              Choose an amenity or interest
-                            </option>
-                            {lifestyleCategories
-                              .filter(
-                                (c) =>
-                                  !preference.lifestyles.some(
-                                    (l) => l.category === c,
-                                  ),
-                              )
-                              .map((c) => (
-                                <option key={c}>{c}</option>
-                              ))}
-                          </select>
-                        </label>
-                      )}
-                    </Section>
-                    <Section
-                      icon={<ListFilter />}
-                      title="What matters most"
-                      detail="Total must be 100%"
-                    >
-                      {(
-                        ["destination", "lifestyle", "affordability"] as const
-                      ).map((key, index) => (
-                        <div className={styles.weight} key={key}>
-                          <label htmlFor={`weight-${key}`}>
-                            {
-                              [
-                                "Your journeys",
-                                "Your lifestyle",
-                                "Your budget",
-                              ][index]
-                            }
-                          </label>
-                          <input
-                            id={`weight-${key}`}
-                            type="range"
-                            min={0}
-                            max={100}
-                            step={5}
-                            value={preference.weights[key]}
-                            onChange={(e) =>
-                              update({
-                                weights: {
-                                  ...preference.weights,
-                                  [key]: Number(e.target.value),
-                                },
-                              })
-                            }
-                          />
-                          <output htmlFor={`weight-${key}`}>
-                            {preference.weights[key]}%
-                          </output>
+                            {total}%{" "}
+                            {total === 100 ? "/ 100%" : "- adjust to 100%"}
+                          </strong>
                         </div>
-                      ))}
-                      <div className={styles.weightTotal}>
-                        <span>Combined priority</span>
-                        <strong
-                          style={{
-                            color:
-                              total === 100 ? "var(--accent)" : "var(--danger)",
-                          }}
-                        >
-                          {total}%{" "}
-                          {total === 100 ? "/ 100%" : "- adjust to 100%"}
-                        </strong>
+                      </Section>
+                      <div className={styles.footer}>
+                        <span>
+                          {preview
+                            ? "Preview changes are not saved."
+                            : "Review before saving to your account."}
+                        </span>
+                        <button className={styles.button} type="submit">
+                          Review preferences
+                          <ArrowRight />
+                        </button>
                       </div>
-                    </Section>
-                    <div className={styles.footer}>
-                      <span>
-                        {preview
-                          ? "Preview changes are not saved."
-                          : "Review before saving to your account."}
-                      </span>
-                      <button className={styles.button} type="submit">
-                        Review preferences
-                        <ArrowRight />
-                      </button>
-                    </div>
-                  </form>
+                    </form>
+                  </>
                 ) : step === "review" ? (
                   <>
                     <Section
@@ -1345,8 +2049,9 @@ export function HomeMatch({
                         : `${preference.name} is confirmed. You can return to it from My profiles.`}
                     </p>
                     <p className={styles.hint}>
-                      Area recommendations will be connected in the next
-                      milestone.
+                      Area ranking currently supports Resale HDB, with parks,
+                      hawker centres, badminton venues, schools and hospitals.
+                      Grocery evidence is partial; its rankings are provisional.
                     </p>
                     <div className={styles.footer} style={{ marginTop: 28 }}>
                       <button
@@ -1356,6 +2061,20 @@ export function HomeMatch({
                         <FilePenLine />
                         Edit preferences
                       </button>
+                      {!preview && (
+                        <button
+                          className={styles.button}
+                          disabled={busy || !active?.confirmed}
+                          onClick={() => {
+                            if (active) findAreas(active);
+                          }}
+                        >
+                          <Search />{" "}
+                          {active?.preference.category === "Resale HDB"
+                            ? "Find matching areas"
+                            : "Explore areas"}
+                        </button>
+                      )}
                       {!preview && (
                         <button
                           className={styles.textButton}
@@ -1465,6 +2184,22 @@ export function HomeMatch({
           )}
         </main>
       </div>
+      {user && accountOpen && (
+        <AccountDialog
+          email={user.email}
+          onClose={() => setAccountOpen(false)}
+          onDelete={deleteAccount}
+          onReauthenticate={async () => {
+            if (await signOut()) {
+              setAuthKind("sign-in");
+              setAuthMessage(
+                "Sign in again, then reopen Account settings and confirm deletion.",
+              );
+              setAuthOpen(true);
+            } else throw new Error("Unable to end the current session");
+          }}
+        />
+      )}
       {(authOpen || deleteTarget) && (
         <div className={styles.overlay}>
           <div
@@ -1480,7 +2215,9 @@ export function HomeMatch({
                   ? "Delete this profile?"
                   : authKind === "sign-in"
                     ? "Welcome home."
-                    : "Create your account"}
+                    : authKind === "recover"
+                      ? "Reset your password"
+                      : "Create your account"}
               </h2>
               <button
                 className={styles.icon}
@@ -1525,6 +2262,31 @@ export function HomeMatch({
               </>
             ) : (
               <form onSubmit={authenticate}>
+                {authKind !== "recover" && (
+                  <button
+                    type="button"
+                    className={styles.button}
+                    disabled={busy}
+                    onClick={() => authenticateOAuth("google")}
+                  >
+                    Continue with Google <ArrowRight />
+                  </button>
+                )}
+                {authKind !== "recover" && appleSignInEnabled && (
+                  <button
+                    type="button"
+                    className={styles.button}
+                    disabled={busy}
+                    onClick={() => authenticateOAuth("apple")}
+                  >
+                    Continue with Apple <ArrowRight />
+                  </button>
+                )}
+                <p className={styles.hint}>
+                  {authKind === "recover"
+                    ? "Enter your account email to request a recovery link."
+                    : "Or use your email"}
+                </p>
                 <label>
                   Email
                   <input
@@ -1535,21 +2297,23 @@ export function HomeMatch({
                     maxLength={254}
                   />
                 </label>
-                <label>
-                  Password
-                  <input
-                    type="password"
-                    name="password"
-                    autoComplete={
-                      authKind === "sign-in"
-                        ? "current-password"
-                        : "new-password"
-                    }
-                    required
-                    minLength={authKind === "sign-up" ? 12 : 1}
-                    maxLength={128}
-                  />
-                </label>
+                {authKind !== "recover" && (
+                  <label>
+                    Password
+                    <input
+                      type="password"
+                      name="password"
+                      autoComplete={
+                        authKind === "sign-in"
+                          ? "current-password"
+                          : "new-password"
+                      }
+                      required
+                      minLength={authKind === "sign-up" ? 12 : 1}
+                      maxLength={128}
+                    />
+                  </label>
+                )}
                 {authKind === "sign-up" && (
                   <p className={styles.hint}>Use at least 12 characters.</p>
                 )}
@@ -1559,10 +2323,25 @@ export function HomeMatch({
                     ? "Please wait..."
                     : authKind === "sign-in"
                       ? "Sign in"
-                      : "Create account"}
+                      : authKind === "recover"
+                        ? "Send recovery email"
+                        : "Create account"}
                   <ArrowRight />
                 </button>
                 <div className={styles.dialogBottom}>
+                  {authKind === "sign-in" && (
+                    <button
+                      type="button"
+                      className={styles.textButton}
+                      disabled={busy}
+                      onClick={() => {
+                        setAuthKind("recover");
+                        setAuthMessage("");
+                      }}
+                    >
+                      Forgot password?
+                    </button>
+                  )}
                   <button
                     type="button"
                     className={styles.textButton}
@@ -1576,7 +2355,7 @@ export function HomeMatch({
                   >
                     {authKind === "sign-in"
                       ? "New here? Create an account"
-                      : "Already registered? Sign in"}
+                      : "Back to sign in"}
                   </button>
                 </div>
               </form>

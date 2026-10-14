@@ -1,9 +1,10 @@
 import "server-only";
 import { z } from "zod";
 import { locationSchema } from "@/domain/preferences";
-import { config } from "../config";
+import { oneMap } from "../providers/oneMap";
 import { AppError } from "../http";
 import { adminClient } from "../supabase";
+import { OneMapError } from "../providers/oneMapClient.mjs";
 
 const responseSchema = z.object({
   results: z.array(
@@ -16,14 +17,6 @@ const responseSchema = z.object({
 });
 export class OneMapAdapter {
   async search(query: string) {
-    const token = config().ONEMAP_TOKEN;
-    if (!token)
-      throw new AppError(
-        "ONEMAP_UNAVAILABLE",
-        "OneMap address search is not configured. Your entries have been kept.",
-        503,
-        true,
-      );
     const url = new URL("https://www.onemap.gov.sg/api/common/elastic/search");
     url.search = new URLSearchParams({
       searchVal: query,
@@ -32,14 +25,7 @@ export class OneMapAdapter {
       pageNum: "1",
     }).toString();
     try {
-      const response = await fetch(url, {
-        headers: { Authorization: token },
-        signal: AbortSignal.timeout(8000),
-        cache: "no-store",
-      });
-      if (!response.ok) throw new Error("Provider failure");
-      const raw = await response.json();
-      if (raw.error) throw new Error("Provider auth failure");
+      const raw = await oneMap.json(url);
       const locations = responseSchema
         .parse(raw)
         .results.slice(0, 10)
@@ -53,13 +39,30 @@ export class OneMapAdapter {
           }),
         );
       if (locations.length) {
-        const { error } = await adminClient()
+        const { data, error } = await adminClient()
           .from("location_catalog")
-          .upsert(locations, { onConflict: "id" });
-        if (error) throw new Error("Catalog unavailable");
+          .upsert(locations, { onConflict: "id" })
+          .select("id,label,latitude,longitude,source");
+        if (error || !data || data.length !== locations.length)
+          throw new Error("Catalog unavailable");
+        // Return the database's numeric representation, which the profile trigger compares.
+        const stored = z.array(locationSchema).parse(data);
+        return locations.map((location) => {
+          const canonical = stored.find((row) => row.id === location.id);
+          if (!canonical) throw new Error("Catalog result missing");
+          return canonical;
+        });
       }
       return locations;
-    } catch {
+    } catch (error) {
+      if (error instanceof OneMapError && error.retryAfter)
+        throw new AppError(
+          "ONEMAP_RATE_LIMIT",
+          "OneMap is temporarily limiting requests. Keep your text and retry later.",
+          503,
+          true,
+          error.retryAfter,
+        );
       throw new AppError(
         "ONEMAP_UNAVAILABLE",
         "OneMap address search is unavailable. Keep your text and retry.",

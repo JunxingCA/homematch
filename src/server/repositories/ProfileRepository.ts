@@ -30,7 +30,13 @@ function check(error: { message: string } | null) {
       "You can save up to four profiles. Delete one before adding another.",
       409,
     );
-  if (error.message.includes("LOCATION"))
+  if (error.message.includes("UNVERIFIED_LOCATION"))
+    throw new AppError(
+      "UNVERIFIED_LOCATION",
+      "A selected address no longer matches the location catalog. Search and select that destination again, then retry.",
+      422,
+    );
+  if (error.message.includes("UNRESOLVED_LOCATION"))
     throw new AppError(
       "UNVERIFIED_LOCATION",
       "Resolve every destination before confirming.",

@@ -119,4 +119,25 @@ test("preview cannot write profiles and API rejects cross-origin writes", async 
   });
   expect(preview.status()).toBe(503);
   expect((await preview.json()).error.code).toBe("PREVIEW_ONLY");
+  const saveArea = await request.post("/api/shortlist", {
+    headers: { Origin: "https://malicious.example" },
+    data: {},
+  });
+  expect(saveArea.status()).toBe(403);
+  const removeArea = await request.delete(
+    "/api/shortlist/11111111-1111-4111-8111-111111111111",
+    { headers: { Origin: "https://malicious.example" } },
+  );
+  expect(removeArea.status()).toBe(403);
+  const shortlist = await request.get("/api/shortlist");
+  expect(shortlist.status()).toBe(503);
+  expect((await shortlist.json()).error.code).toBe("PREVIEW_ONLY");
+  const ai = await request.post("/api/preferences/interpret", {
+    headers: { Origin: "https://malicious.example" },
+    data: { text: "A sample resale home", consent: true },
+  });
+  expect(ai.status()).toBe(403);
+  const aiStatus = await request.get("/api/preferences/interpret");
+  expect(aiStatus.status()).toBe(503);
+  expect((await aiStatus.json()).error.code).toBe("PREVIEW_ONLY");
 });

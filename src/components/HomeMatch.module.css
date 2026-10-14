@@ -1,6 +1,85 @@
 .shell {
   min-height: 100vh;
 }
+.accountMessage {
+  color: var(--accent);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 12px 14px;
+  margin-bottom: 20px;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.accountWarning {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+.mapShell .layout {
+  max-width: none;
+  display: flex;
+  flex-direction: column;
+}
+.mapShell .sidebar {
+  min-height: 0;
+  padding: 4px 20px;
+  border-right: 0;
+  border-bottom: 1px solid var(--line);
+}
+.mapShell .sidebar > div:first-child {
+  display: flex;
+  gap: 8px;
+}
+.mapShell .sidebar .eyebrow,
+.mapShell .profileList,
+.mapShell .asideNote,
+.mapShell .topline {
+  display: none;
+}
+.mapShell .sidebar .navItem {
+  width: auto;
+  margin: 0;
+  padding: 7px 10px;
+  min-height: 36px;
+  font-size: 12px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+.mapShell .main h1 {
+  font-size: 18px;
+}
+@media (max-width: 650px) {
+  .mapShell .sidebar {
+    padding: 4px 12px;
+  }
+  .mapShell .sidebar > div:first-child {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+  }
+  .mapShell .sidebar .navItem {
+    padding: 6px 3px;
+    font-size: 10px;
+    gap: 4px;
+  }
+  .mapShell .main h1 {
+    font-size: 16px;
+  }
+}
+.mapShell .main {
+  padding: 0;
+  min-width: 0;
+  position: relative;
+}
+.mapShell .main > .error,
+.mapShell .main > .notice {
+  position: absolute;
+  top: 64px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: calc(100% - 24px);
+  z-index: 1100;
+  box-shadow: 0 6px 24px #0003;
+}
 .header {
   height: 76px;
   border-bottom: 1px solid var(--line);
@@ -586,6 +665,8 @@
 .dialogBottom {
   margin-top: 16px;
   text-align: center;
+  display: grid;
+  gap: 12px;
 }
 .email {
   max-width: 160px;
@@ -685,6 +766,11 @@
     gap: 4px;
     min-width: 0;
   }
+  .sidebar > div:first-child {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+  }
   .sideHeading,
   .sidebar .asideNote,
   .sidebar .eyebrow,
@@ -692,11 +778,19 @@
     display: none;
   }
   .navItem {
-    width: auto;
-    font-size: 12px;
-    padding: 8px 10px;
-    white-space: nowrap;
+    width: 100%;
+    font-size: 11px;
+    padding: 8px 3px;
+    white-space: normal;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 4px;
+    min-height: 58px;
     margin: 0;
+  }
+  .navItem svg {
+    width: 16px;
+    height: 16px;
   }
   .main {
     padding: 25px 18px;
@@ -784,5 +878,21 @@
   }
   .savedTitle {
     flex-wrap: wrap;
+  }
+}
+@media (max-width: 400px) {
+  .header {
+    padding: 0 10px;
+    gap: 8px;
+  }
+  .brand {
+    font-size: 18px;
+  }
+  .brand img {
+    width: 26px;
+    height: 32px;
+  }
+  .headerRight {
+    gap: 5px;
   }
 }

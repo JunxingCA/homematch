@@ -1,0 +1,105 @@
+.dialog {
+  width: min(480px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  padding: 24px;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 16px 60px #0005;
+}
+.dialog::backdrop {
+  background: #0009;
+}
+.dialog header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.dialog h2 {
+  font-size: 20px;
+}
+.dialog p {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 12px 0;
+}
+.dialog label {
+  margin: 20px 0 8px;
+}
+.dialog button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 9px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  font-size: 13px;
+}
+.icon {
+  width: 38px;
+  padding: 8px !important;
+  min-height: 38px !important;
+  color: var(--muted);
+  background: transparent;
+  flex-shrink: 0;
+}
+.danger {
+  background: var(--danger);
+  color: var(--bg);
+  border-color: var(--danger) !important;
+}
+.secondary {
+  background: transparent;
+  color: var(--text);
+}
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.identity svg {
+  width: 18px;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.deleteSection {
+  border-top: 1px solid var(--line);
+  margin-top: 24px;
+  padding-top: 20px;
+}
+.deleteSection h3 {
+  font-size: 15px;
+}
+.dialog .note {
+  font-size: 11px;
+}
+.dialog .error {
+  padding: 10px;
+  border: 1px solid var(--danger);
+  border-radius: 4px;
+  color: var(--danger);
+  overflow-wrap: anywhere;
+}
+.actions {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 20px;
+}
+@media (max-width: 650px) {
+  .dialog {
+    padding: 20px;
+  }
+  .dialog h2 {
+    font-size: 18px;
+  }
+}

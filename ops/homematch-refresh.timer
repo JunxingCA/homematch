@@ -1,0 +1,11 @@
+[Unit]
+Description=Check HomeMatch research freshness hourly
+
+[Timer]
+OnCalendar=hourly
+Persistent=true
+RandomizedDelaySec=5min
+Unit=homematch-refresh.service
+
+[Install]
+WantedBy=timers.target
