@@ -1,17 +1,17 @@
 :root {
   color-scheme: dark;
-  --bg: #101313;
-  --text: #f0f4f1;
-  --muted: #a4b1aa;
-  --accent: #68ddb0;
-  --ink: #102d20;
+  --bg: #151313;
+  --text: #faf3f2;
+  --muted: #c2b1af;
+  --accent: #ef7276;
+  --ink: #31080e;
 }
 html[data-theme="light"] {
   color-scheme: light;
-  --bg: #f5f7f6;
-  --text: #18251f;
-  --muted: #56685e;
-  --accent: #137653;
+  --bg: #faf8f8;
+  --text: #312426;
+  --muted: #71595c;
+  --accent: #ad1e30;
   --ink: #fff;
 }
 * {

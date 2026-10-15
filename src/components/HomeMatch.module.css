@@ -153,9 +153,9 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: var(--accent);
-  border: 1px solid var(--accent);
-  color: var(--accent-ink);
+  background: var(--solid-action, var(--accent));
+  border: 1px solid var(--solid-action, var(--accent));
+  color: var(--solid-action-ink, var(--accent-ink));
   border-radius: 6px;
   padding: 11px 18px;
   font-weight: 600;

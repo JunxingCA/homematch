@@ -51,6 +51,9 @@ test("forgot password preserves manual preferences and supports email failure/re
     return route.abort();
   });
   await page.goto("/");
+  await page
+    .getByRole("button", { name: "Preview planner", exact: true })
+    .click();
   await page.getByLabel("Maximum budget (SGD)").fill("720000");
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await page.getByRole("button", { name: "Forgot password?" }).click();

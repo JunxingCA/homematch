@@ -20,7 +20,7 @@ for (const [name, size, ratio] of [
     .png()
     .toBuffer();
   await sharp({
-    create: { width: size, height: size, channels: 4, background: "#101313" },
+    create: { width: size, height: size, channels: 4, background: "#151313" },
   })
     .composite([{ input: mark, gravity: "centre" }])
     .png()

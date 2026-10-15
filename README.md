@@ -1,5 +1,12 @@
 # HomeMatch
 
+Crimson UI increment: a signed-out photo-led entrance and `/welcome` preview reuse
+the existing login/recovery flow. Signed-in users retain direct workspace access.
+Crimson is the default; rose/emerald remain optional previews. See
+[LANDING_PAGE.md](docs/LANDING_PAGE.md) and the deployment record for release status.
+The requested future property-detail gallery/card is planned, not implemented:
+[FUTURE_PROPERTY_DETAILS.md](docs/FUTURE_PROPERTY_DETAILS.md).
+
 Production custom address: [homematch.unify-x.com](https://homematch.unify-x.com),
 using Cloudflare DNS and Vercel Hobby. The canonical-address release passes hosted
 smoke checks; homematch-sandy.vercel.app redirects to this address.

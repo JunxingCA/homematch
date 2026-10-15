@@ -472,6 +472,8 @@ test("saved profile to map, evidence, comparison, theme and persisted search his
     page.getByRole("button", { name: "Saved areas 1", exact: true }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Sign out", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "HomeMatch", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Preview planner", exact: true }).click();
   await page
     .getByRole("button", { name: "Saved areas 0", exact: true })
     .click();

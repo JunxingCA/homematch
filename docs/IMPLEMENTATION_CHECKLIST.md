@@ -1,11 +1,46 @@
 # HomeMatch Implementation Checklist
 
-Updated 14 October 2026. A checked implementation item means working code exists.
+Updated 15 October 2026. A checked implementation item means working code exists.
 A checked verification item means the named checks were actually run, not merely
 written. Hosted/provider checks are separate from fixtures and owner-reported
 acceptance. See VERCEL_DEPLOYMENT.md for the actual production release.
 
-## Current Increment: Custom Domain, History and Market Ranking
+## Local Increment: Login Landing Page
+
+- [x] Add an optional rose/cranberry palette preview at /welcome?palette=rose,
+  retaining emerald at /welcome?palette=emerald. Verify landing/planner colours,
+  matching logo, both themes and desktop/mobile layout without new stored data;
+  all 14 landing/palette browser checks and 407 unit/database checks pass.
+- [x] Add deeper crimson at /welcome?palette=red with white-text primary actions,
+  matching HomeMatch logo and dark/light surfaces. Preserve rose/emerald options;
+  all 16 desktop/mobile landing/palette checks pass. No Singpass integration or
+  government affiliation is implied; these previews remain local only.
+
+- [x] Add a HomeMatch-branded, photo-led signed-out entrance with working paths to
+  existing sign-in/registration/recovery and the non-persistent manual planner.
+- [x] Preserve direct workspace access for signed-in users; add /welcome to inspect
+  the entrance without signing out. No auth, callback or database policy is widened.
+- [x] Verify desktop/mobile, dark/light, login/recovery errors, returning sessions,
+  image loading, keyboard behaviour and no horizontal overflow. Fix the modal opener
+  losing focus after a failed provider request; test the non-persistent planner.
+- [x] Pass 407 unit/database checks, lint/types, 12 new landing checks, 46 existing
+  account/AI/map/market checks, eight recovery checks and a production build.
+  Browser authentication/email responses use fixtures, not real account changes.
+- [ ] Deploy this increment only after local checks and review. Current live release
+  remains separately recorded in VERCEL_DEPLOYMENT.md.
+
+## Future Feature: Property Listing Detail Overlay
+
+- [x] Record the user's photo-gallery/property-facts reference as future work in
+  FUTURE_PROPERTY_DETAILS.md, with source/permission and scope gates.
+- [ ] Obtain authorised listing/photo/lease/room data before building a live feed;
+  historical HDB transactions are not listing inventory or photo permission.
+- [ ] Build/test the gallery, asking-price/area/psf/lease/unit facts, More details,
+  distance toggles and property-specific routes, including mobile and missing data.
+- [ ] Revise SRS/use cases/data model for listing integration and distinguish area
+  saves/scores from property saves/evidence; do not present this as implemented.
+
+## Previous Increment: Custom Domain, History and Market Ranking
 
 - [x] Configure and verify DNS-only Cloudflare CNAME for homematch.unify-x.com; remove the accidental homemate project attachment.
 - [x] Implement account-scoped Clear recent searches with explicit confirmation, failure/retry, reload persistence and cross-tab refresh.

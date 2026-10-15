@@ -1,6 +1,6 @@
 /* Only these public, credential-free files may enter the offline cache. */
 const CACHE_PREFIX = "homematch-offline-";
-const CACHE_NAME = `${CACHE_PREFIX}v1`;
+const CACHE_NAME = `${CACHE_PREFIX}v2`;
 const OFFLINE_URL = "/pwa/offline.html";
 const ASSETS = [
   OFFLINE_URL,

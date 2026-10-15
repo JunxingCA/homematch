@@ -2,6 +2,7 @@ import { defineConfig, devices } from "@playwright/test";
 export default defineConfig({
   testDir: "tests/e2e",
   testIgnore: [
+    "landing.spec.ts",
     "recommendations.spec.ts",
     "interpretation.spec.ts",
     "interpretation-checks.spec.ts",
