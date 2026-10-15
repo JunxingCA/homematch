@@ -1,5 +1,45 @@
 # Vercel Deployment
 
+## Verified Crimson Landing Release, 15 October 2026
+
+- Live: `https://homematch.unify-x.com`; `/welcome` can show the entrance even
+  when an existing session would otherwise open the workspace directly.
+- Source commit `ecf06ccab7c12559035b5b20c7969950d59a7e2f` is pushed to the
+  existing private `JunxingCA/homematch` repository.
+- Deployment `dpl_ARFApzH8gCw6D2Mge1kDLQwABeRh` is READY and production-aliased.
+  Immutable URL: `https://homematch-9fztvkv4w-home-match1.vercel.app`.
+- Metadata confirms source commit, Node 22.x, runtime region `sin1`, public=false.
+  Existing workspace remains Hobby; no paid upgrade or new service was enabled.
+- Crimson is the server-rendered default. Login/recovery reuse the existing
+  handlers; returning users retain direct workspace access. Rose/emerald are
+  optional visual comparisons, not new identity providers or persistent settings.
+- The default SVG, five PWA icons, manifest theme and public offline screen match.
+  Worker cache version v2 refreshes public assets through the existing
+  user-approved update flow; no private caching or automatic takeover is added.
+- Local checks: lint/types, 407 unit/database tests, production build, 16
+  desktop/mobile landing checks, 46 account/AI/map/history/market checks and 24
+  production-build PWA checks. Three platform-specific PWA skips are intentional.
+- Upload inspection: 116 entries, 1,477,055 bytes total; no environment/cache/test/
+  research-script/SQL/document content uploaded. Changed-file upload was 840.2 KB.
+- Source scan: 219 candidate text files, zero configured-secret matches. Hosted
+  HTML and ten JavaScript files also contain zero configured-secret matches.
+- Hosted root returns 200 and the crimson anonymous entrance; private APIs return
+  401 anonymously, a foreign-origin mutation returns 403, `.env.local` returns 404,
+  and the old stable alias retains its 307 redirect to the canonical address.
+- Google initiation retains the exact callback, S256 PKCE, Secure/HttpOnly cookies.
+  Apple remains disabled. No Auth configuration, migration or user data changed.
+- Published photo, source logos, favicon and 192px icon match local hashes. Live
+  browser inspection verifies the page, photo and opening/closing the sign-in
+  dialog. An existing worker offers Update now as intended. No real account
+  credentials were entered and fresh authenticated acceptance remains separate.
+- `npm audit --omit=dev` reports zero production vulnerabilities. The five existing
+  development-tool high advisories still require reviewed maintenance; no forced
+  dependency upgrade was performed during this visual release.
+
+Subsequent release-record edits affect excluded documentation only; the deployed
+application source remains `ecf06cc`. Future property listing details are planned
+in FUTURE_PROPERTY_DETAILS.md, not implemented by this release.
+
 ## Project
 
 - Account workspace: `home-match1` (HomeMatch), confirmed Hobby plan.

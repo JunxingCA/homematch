@@ -39,8 +39,8 @@ Full-width photography, emerald actions, a restrained cursive accent and two
 housing pathways adapt that direction to the actual area-research application.
 
 Future property-card request is recorded separately in FUTURE_PROPERTY_DETAILS.md.
-The existing group PDF is unchanged, avoiding stale claims of a deployed landing
-or live listing feed. The implementation checklist records current/future work.
+The dated group PDF is unchanged. Current release status is recorded here and in
+VERCEL_DEPLOYMENT.md; the implementation checklist separates current/future work.
 
 ## Local Verification, 15 October 2026
 
@@ -75,3 +75,9 @@ Release checks: 407 unit/database tests, lint/types and production build; 16
 desktop/mobile landing/palette checks and 46 account/AI/map/history/market checks.
 Source scan covers 219 candidate text files with zero configured secret matches.
 Hosted verification and the production PWA suite are recorded in the release log.
+
+Published and verified at https://homematch.unify-x.com from commit ecf06cc,
+deployment dpl_ARFApzH8gCw6D2Mge1kDLQwABeRh. The PWA suite passes 24 checks with
+three intentional platform skips. Hosted page/assets, anonymous access denial,
+Google initiation and secret scans pass. Real authenticated/device acceptance is
+not inferred from the fixture tests or opening the hosted sign-in dialog.

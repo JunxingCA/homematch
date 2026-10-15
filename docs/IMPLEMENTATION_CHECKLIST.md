@@ -5,7 +5,7 @@ A checked verification item means the named checks were actually run, not merely
 written. Hosted/provider checks are separate from fixtures and owner-reported
 acceptance. See VERCEL_DEPLOYMENT.md for the actual production release.
 
-## Local Increment: Login Landing Page
+## Current Increment: Crimson Login Landing Page
 
 - [x] Add an optional rose/cranberry palette preview at /welcome?palette=rose,
   retaining emerald at /welcome?palette=emerald. Verify landing/planner colours,
@@ -14,7 +14,7 @@ acceptance. See VERCEL_DEPLOYMENT.md for the actual production release.
 - [x] Add deeper crimson at /welcome?palette=red with white-text primary actions,
   matching HomeMatch logo and dark/light surfaces. Preserve rose/emerald options;
   all 16 desktop/mobile landing/palette checks pass. No Singpass integration or
-  government affiliation is implied; these previews remain local only.
+  government affiliation is implied. Crimson is now the deployed default.
 
 - [x] Add a HomeMatch-branded, photo-led signed-out entrance with working paths to
   existing sign-in/registration/recovery and the non-persistent manual planner.
@@ -26,8 +26,11 @@ acceptance. See VERCEL_DEPLOYMENT.md for the actual production release.
 - [x] Pass 407 unit/database checks, lint/types, 12 new landing checks, 46 existing
   account/AI/map/market checks, eight recovery checks and a production build.
   Browser authentication/email responses use fixtures, not real account changes.
-- [ ] Deploy this increment only after local checks and review. Current live release
-  remains separately recorded in VERCEL_DEPLOYMENT.md.
+- [x] Push source commit ecf06cc to private GitHub and deploy to homematch.unify-x.com
+  after local checks. Verify the live entrance, assets, protected APIs, exact Google
+  callback/secure cookies and public-bundle secret scan. See VERCEL_DEPLOYMENT.md.
+- [x] Align favicon/PWA/offline branding, pass 24 production PWA checks and retain
+  the user-approved worker-update flow; three platform-specific skips remain.
 
 ## Future Feature: Property Listing Detail Overlay
 
