@@ -5,6 +5,48 @@ const owner = {
   email: "landing@example.test",
 };
 
+test("landing fonts load locally without Google Fonts or platform cursive fallback", async ({
+  page,
+}, info) => {
+  await fixture(page);
+  const externalFontRequests: string[] = [];
+  page.on("request", (request) => {
+    if (/fonts\.(googleapis|gstatic)\.com/.test(request.url()))
+      externalFontRequests.push(request.url());
+  });
+  await page.route(/https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/, (route) =>
+    route.abort(),
+  );
+  await page.goto("/welcome");
+  const script = page.getByText("feel at home.", { exact: true });
+  await expect(script).toBeVisible();
+  const fonts = await script.evaluate(async (el) => {
+    await document.fonts.ready;
+    const family = getComputedStyle(el).fontFamily;
+    const faces = await document.fonts.load(
+      `400 32px ${family}`,
+      "feel at home.",
+    );
+    return {
+      family,
+      loaded: faces.length,
+      status: faces.map((face) => face.status),
+    };
+  });
+  expect(fonts.family).not.toMatch(/Comic|cursive|Playwrite SG/i);
+  expect(fonts.loaded).toBeGreaterThan(0);
+  expect(fonts.status.every((status) => status === "loaded")).toBe(true);
+  expect(externalFontRequests).toEqual([]);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await page.screenshot({
+    path: `test-results/local-font-${info.project.name}.png`,
+  });
+});
+
 for (const palette of ["rose", "red"] as const) {
   test(`${palette} palette applies to landing and planner in both modes without persisting private state`, async ({
     page,
@@ -64,7 +106,9 @@ for (const palette of ["rose", "red"] as const) {
       "data-palette",
       "emerald",
     );
-    await expect(page.locator('img[src="/homematch-logo-emerald.svg"]')).toBeVisible();
+    await expect(
+      page.locator('img[src="/homematch-logo-emerald.svg"]'),
+    ).toBeVisible();
   });
 }
 

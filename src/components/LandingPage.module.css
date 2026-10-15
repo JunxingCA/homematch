@@ -173,7 +173,7 @@
 .script {
   display: block;
   margin-top: 23px;
-  font-family: "Playwrite SG", cursive;
+  font-family: var(--font-script), Georgia, serif;
   font-size: 21px;
 }
 .scrollLink {
