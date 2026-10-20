@@ -1,0 +1,136 @@
+.reveal {
+  position: fixed;
+  inset: 0;
+  z-index: 1500;
+  background: var(--night-deep);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  padding: 24px;
+  animation: fade 0.4s ease both;
+}
+
+.kicker {
+  margin: 0;
+  color: #c3ccdd;
+  font-family: var(--font-display), Arial, sans-serif;
+  font-size: 20px;
+  text-align: center;
+  animation: fade-up 0.5s ease both;
+}
+
+.map {
+  width: min(860px, 92vw);
+  height: auto;
+  display: block;
+}
+
+.land {
+  fill: #16213a;
+  stroke: #2a3754;
+  stroke-width: 1.5;
+  animation: fade 0.9s ease both;
+}
+
+.dim {
+  fill: #3a4a6b;
+  animation: fade 0.5s ease 0.6s both;
+}
+
+.pin,
+.best,
+.ring {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.pin {
+  fill: var(--amber-glow);
+  filter: drop-shadow(0 0 6px #ffc46b);
+  animation: pin-in 0.7s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+}
+
+.best {
+  fill: var(--coral);
+  filter: drop-shadow(0 0 6px #e5553b);
+  animation: pin-in 0.7s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+}
+
+.ring {
+  fill: none;
+  stroke: var(--coral);
+  stroke-width: 2;
+  opacity: 0;
+  animation: ring 1.6s ease-out infinite;
+}
+
+.label {
+  fill: #eef1ea;
+  font-family: var(--font-body), Arial, sans-serif;
+  font-weight: 600;
+  animation: fade 0.5s ease both;
+}
+
+.line {
+  margin: 0;
+  color: #eef1ea;
+  font-family: var(--font-display), Arial, sans-serif;
+  font-size: clamp(28px, 3.4vw, 44px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  text-align: center;
+  animation: fade-up 0.5s ease both;
+}
+
+.skip {
+  position: absolute;
+  right: 28px;
+  bottom: 28px;
+  background: transparent;
+  border: 1.5px solid rgba(238, 241, 234, 0.6);
+  color: #eef1ea;
+  font-weight: 600;
+  font-size: 15px;
+  padding: 12px 22px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.skip:hover,
+.skip:focus-visible {
+  border-color: var(--amber-glow);
+  color: var(--amber-glow);
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+@keyframes pin-in {
+  from {
+    opacity: 0;
+    transform: scale(0);
+  }
+}
+
+@keyframes ring {
+  from {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  to {
+    transform: scale(3.6);
+    opacity: 0;
+  }
+}

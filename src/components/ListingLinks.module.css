@@ -4,16 +4,19 @@
   margin-top: 16px;
 }
 .links h3 {
-  font-size: 14px;
+  font-size: 17px;
   margin-bottom: 10px;
 }
 .links a {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  color: var(--accent);
-  font-size: 13px;
-  font-weight: 600;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration-color: var(--amber);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
   padding: 8px 0;
   overflow-wrap: anywhere;
 }
@@ -21,8 +24,8 @@
   flex-shrink: 0;
 }
 .links p {
-  color: var(--muted);
-  font-size: 11px;
+  color: var(--ink-2);
+  font-size: 13px;
   margin: 4px 0 10px;
   line-height: 1.6;
 }

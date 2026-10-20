@@ -17,6 +17,7 @@ import {
   CircleDot,
   Layers,
   Scale,
+  RotateCcw,
 } from "lucide-react";
 import type { AreaResult, Discovery } from "@/domain/recommendations";
 import { priceHeading, priceRange } from "@/domain/recommendations";
@@ -31,6 +32,18 @@ import {
 } from "./amenityPresentation";
 import { useMapFacilities } from "./useMapFacilities";
 import { ListingLinks } from "./ListingLinks";
+import { WindowMeter } from "./lights/WindowMeter";
+import { EmptyState, LoadingState } from "./states/States";
+import { CompareBlocks } from "./results/CompareBlocks";
+import { MatchReveal, REVEAL_SEEN_KEY } from "./results/MatchReveal";
+import { WeekdayView } from "./results/WeekdayView";
+import {
+  litWindows,
+  ordinal,
+  SCORE_TILES,
+  scoreFor,
+  town,
+} from "./results/resultView";
 const AreaMap = dynamic(() => import("./AreaMap"), {
   ssr: false,
   loading: () => <div className={styles.map}>Loading map...</div>,
@@ -41,8 +54,6 @@ const money = (n: number) =>
     currency: "SGD",
     maximumFractionDigits: 0,
   }).format(n);
-const town = (s: string) =>
-  s.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
 const score = (n: number | null) =>
   n === null ? "Not contributing" : n.toFixed(1);
 
@@ -89,6 +100,9 @@ export function RecommendationResults({
   const [browseRadius, setBrowseRadius] = useState(1000);
   const [compare, setCompare] = useState<string[]>([]),
     [comparison, setComparison] = useState(false);
+  const [reveal, setReveal] = useState(false);
+  const [weekday, setWeekday] = useState(false);
+  const covered = comparison || weekday;
   const selected =
     discovery?.results.find((r) => r.area.id === selection) ??
     discovery?.results[0];
@@ -107,34 +121,50 @@ export function RecommendationResults({
   useEffect(() => {
     detailRef.current?.scrollTo({ top: 0 });
   }, [selected?.area.id]);
+  const revealId =
+    !loading && discovery?.results.length ? discovery.id : undefined;
+  useEffect(() => {
+    if (!revealId) return;
+    try {
+      if (sessionStorage.getItem(REVEAL_SEEN_KEY)) return;
+      sessionStorage.setItem(REVEAL_SEEN_KEY, "1");
+    } catch {
+      return;
+    }
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    queueMicrotask(() => setReveal(true));
+  }, [revealId]);
   const choose = (id: string) => {
     setSelection(id);
+    setWeekday(false);
     setPanel("details");
     setCollapsed(false);
   };
   if (loading)
     return (
-      <div className={styles.loading} role="status">
-        <RefreshCw className={styles.spin} />
-        <h2>Finding areas that fit</h2>
-        <p>
-          Checking historical prices, your journeys, and nearby amenities across
-          Singapore.
-        </p>
-      </div>
+      <LoadingState
+        title="Finding areas that fit"
+        messages={[
+          "Reading historical prices…",
+          "Timing your weekly trips…",
+          "Counting what’s within reach…",
+          "Lighting up your matches…",
+        ]}
+      />
     );
   if (!discovery)
     return (
-      <div className={styles.empty}>
-        <h2>Your search is ready to retry</h2>
-        <p>Your saved preferences are unchanged.</p>
+      <EmptyState
+        title="Your search is ready to retry"
+        body="Your saved preferences are unchanged."
+      >
         <button onClick={onRetry}>
           <RefreshCw /> Retry search
         </button>
         <button onClick={onBack}>
           <ArrowLeft /> {backLabel}
         </button>
-      </div>
+      </EmptyState>
     );
   const compared = discovery.results.filter((r) => compare.includes(r.area.id));
   const visible = discovery.results
@@ -161,6 +191,16 @@ export function RecommendationResults({
           </span>
         </div>
         <div className={styles.actions}>
+          {discovery.results.length > 0 && (
+            <button
+              className={styles.iconOnly}
+              onClick={() => setReveal(true)}
+              aria-label="Replay reveal"
+              title="Replay reveal"
+            >
+              <RotateCcw />
+            </button>
+          )}
           <button onClick={onRetry} title="Recalculate with current evidence">
             <RefreshCw />
             <span className={styles.refreshLabel}>Refresh search</span>
@@ -179,28 +219,44 @@ export function RecommendationResults({
           {discovery.market.coverage}
         </p>
       )}
+      {reveal && (
+        <MatchReveal discovery={discovery} onDone={() => setReveal(false)} />
+      )}
       <div className={styles.workspace} data-view={view}>
+        {weekday && selected && (
+          <WeekdayView
+            discovery={discovery}
+            result={selected}
+            onClose={() => setWeekday(false)}
+          />
+        )}
         {!discovery.results.length ? (
-          <div className={styles.empty}>
-            <h2>No areas have enough evidence</h2>
-            <p>
-              {discovery.market?.kind === "bto"
-                ? "No projects in the imported catalogue match the launch status and selected flat types. Closed launches require the historical-research option in Explore areas."
-                : "Try a longer lookback or broader size filters. Each area needs at least five matching transactions."}
-            </p>
-            {discovery.excluded.length > 0 && (
-              <ul>
-                {discovery.excluded.map((x) => (
-                  <li key={x.area}>
-                    {town(x.area)}: {x.reason}
-                  </li>
-                ))}
-              </ul>
-            )}
+          <EmptyState
+            title="No windows lit, yet."
+            body={
+              <>
+                <p>
+                  No areas have enough evidence.{" "}
+                  {discovery.market?.kind === "bto"
+                    ? "No projects in the imported catalogue match the launch status and selected flat types. Closed launches require the historical-research option in Explore areas."
+                    : "Try a longer lookback or broader size filters. Each area needs at least five matching transactions."}
+                </p>
+                {discovery.excluded.length > 0 && (
+                  <ul>
+                    {discovery.excluded.map((x) => (
+                      <li key={x.area}>
+                        {town(x.area)}: {x.reason}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </>
+            }
+          >
             <button onClick={onBack}>
               <ArrowLeft /> Adjust preferences
             </button>
-          </div>
+          </EmptyState>
         ) : (
           <>
             {comparison && (
@@ -221,6 +277,7 @@ export function RecommendationResults({
                 >
                   <X />
                 </button>
+                <CompareBlocks results={compared} />
                 <div className={styles.tableWrap}>
                   <table>
                     <caption>Comparison from this saved search</caption>
@@ -284,7 +341,7 @@ export function RecommendationResults({
                 </div>
               </div>
             )}
-            <div className={styles.mapControls} inert={comparison}>
+            <div className={styles.mapControls} inert={covered}>
               <div className={styles.viewButtons}>
                 <button
                   aria-pressed={view === "map"}
@@ -311,7 +368,7 @@ export function RecommendationResults({
                 className={styles.quickLayers}
                 role="toolbar"
                 aria-label="Explore amenities"
-                inert={comparison}
+                inert={covered}
               >
                 {lifestyleCategories.map((category) => {
                   const {
@@ -343,7 +400,7 @@ export function RecommendationResults({
                 className={styles.mapLegend}
                 role="region"
                 aria-label="Map legend"
-                inert={comparison}
+                inert={covered}
               >
                 <span>
                   <b
@@ -389,7 +446,7 @@ export function RecommendationResults({
               <div
                 className={styles.browseStatus}
                 role="status"
-                inert={comparison}
+                inert={covered}
               >
                 {browsing.loading ? (
                   "Loading nearby amenities…"
@@ -578,7 +635,7 @@ export function RecommendationResults({
             <div
               className={styles.mapCanvas}
               hidden={view !== "map"}
-              inert={comparison}
+              inert={covered}
             >
               {selected && (
                 <AreaMap
@@ -600,7 +657,7 @@ export function RecommendationResults({
               className={styles.body}
               data-panel={panel}
               data-collapsed={collapsed}
-              inert={comparison}
+              inert={covered}
             >
               <div className={styles.trayTabs}>
                 <button
@@ -699,24 +756,44 @@ export function RecommendationResults({
                         onClick={() => choose(r.area.id)}
                         aria-pressed={r.area.id === selected?.area.id}
                       >
-                        <span className={styles.rank}>
-                          {discovery.results.indexOf(r) + 1}
+                        <span className={styles.rowMeter}>
+                          <WindowMeter lit={litWindows(r.overall)} compact />
+                          <small>{r.overall.toFixed(1)}</small>
                         </span>
-                        <div>
-                          <h3>{town(r.area.name)}</h3>
-                          <p>
+                        <span className={styles.rowBody}>
+                          <span className={styles.rowTop}>
+                            <h3>{town(r.area.name)}</h3>
+                            <span className="tag">
+                              {ordinal(discovery.results.indexOf(r) + 1)} best
+                              fit
+                            </span>
+                          </span>
+                          <span className={styles.rowFacts}>
                             {r.priceEvidence?.kind === "bto-range"
                               ? `${money(priceRange(r).min)}–${money(priceRange(r).max)} published range`
                               : `${money(r.median)} median · ${r.transactions} sales`}
-                          </p>
-                          <p>
+                            <br />
                             {r.weightedMinutes.toFixed(1)} min weighted journey
-                          </p>
-                        </div>
-                        <strong>
-                          {r.overall.toFixed(1)}
-                          <small>/100</small>
-                        </strong>
+                          </span>
+                          <span className={styles.rowBars} aria-hidden="true">
+                            {SCORE_TILES.map((t) => {
+                              const v = scoreFor(r, t.key);
+                              return (
+                                <span
+                                  key={t.key}
+                                  title={`${t.label}: ${v === null ? "not scored" : v.toFixed(1)}`}
+                                >
+                                  <i
+                                    style={{
+                                      width: `${v ?? 0}%`,
+                                      background: t.tint,
+                                    }}
+                                  />
+                                </span>
+                              );
+                            })}
+                          </span>
+                        </span>
                       </button>
                       <label className={styles.compare}>
                         <input
@@ -758,22 +835,41 @@ export function RecommendationResults({
                   className={styles.detail}
                   aria-label="Area evidence"
                 >
-                  <p className={styles.eyebrow}>Why this area</p>
+                  <span className="chip chip--soft">
+                    <span className="dot" />
+                    Why this area
+                  </span>
                   <h2>{town(selected.area.name)}</h2>
                   <p className={styles.areaSubtitle}>
                     {selected.area.originLabel} · representative origin
                   </p>
                   <div className={styles.heroMetrics}>
-                    <strong>
-                      {selected.overall.toFixed(1)}
-                      <small>/100 match</small>
-                    </strong>
-                    <strong>
-                      {money(selected.median)}
-                      <small>{priceHeading(selected)}</small>
-                    </strong>
+                    <span className={styles.heroMeter}>
+                      <WindowMeter lit={litWindows(selected.overall)} />
+                      <span className="tag">
+                        {litWindows(selected.overall)} of 10 lit
+                      </span>
+                    </span>
+                    <span className={styles.heroFigures}>
+                      <strong>
+                        {selected.overall.toFixed(1)}
+                        <small>/100 match</small>
+                      </strong>
+                      <strong>
+                        {money(selected.median)}
+                        <small>{priceHeading(selected)}</small>
+                      </strong>
+                    </span>
                   </div>
                   <button
+                    className={styles.weekdayButton}
+                    onClick={() => setWeekday(true)}
+                  >
+                    A weekday in {town(selected.area.name)}
+                    <ArrowRight />
+                  </button>
+                  <button
+                    className={styles.saveButton}
                     disabled={saving || !shortlistReady}
                     onClick={() => onToggleSave(selected.area.id)}
                     aria-pressed={savedAreas.some(
@@ -804,29 +900,21 @@ export function RecommendationResults({
                       </p>
                     ))}
                   <div className={styles.scores}>
-                    {[
-                      [
-                        "Journeys",
-                        selected.destinationScore,
-                        discovery.preference.weights.destination,
-                      ],
-                      [
-                        "Lifestyle",
-                        selected.lifestyleScore,
-                        discovery.preference.weights.lifestyle,
-                      ],
-                      [
-                        "Budget",
-                        selected.affordabilityScore,
-                        discovery.preference.weights.affordability,
-                      ],
-                    ].map(([label, value, weight]) => (
-                      <div key={String(label)}>
-                        <span>{label}</span>
-                        <strong>{score(value as number | null)}</strong>
-                        <small>{weight}% weight</small>
-                      </div>
-                    ))}
+                    {SCORE_TILES.map((t) => {
+                      const value = scoreFor(selected, t.key);
+                      return (
+                        <div key={t.key} style={{ background: t.tint }}>
+                          <span>{t.label}</span>
+                          <span className={styles.scoreTrack}>
+                            <i style={{ width: `${value ?? 0}%` }} />
+                          </span>
+                          <strong>{score(value)}</strong>
+                          <small>
+                            {discovery.preference.weights[t.key]}% weight
+                          </small>
+                        </div>
+                      );
+                    })}
                   </div>
                   {selected.priceEvidence?.kind === "bto-range" ? (
                     <>

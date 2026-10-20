@@ -1,18 +1,12 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState, type FormEvent } from "react";
-import {
-  ArrowLeft,
-  ArrowRight,
-  CheckCircle2,
-  KeyRound,
-  Moon,
-  Sun,
-} from "lucide-react";
+import { ArrowLeft, ArrowRight, Moon, Sun } from "lucide-react";
 import { resetPasswordSchema } from "@/domain/recovery";
+import { Wordmark } from "./lights/Logo";
 import styles from "./PasswordReset.module.css";
+import { applyTheme, initialTheme } from "./theme";
 
 export function PasswordReset({ available }: { available: boolean }) {
   const [theme, setTheme] = useState("dark");
@@ -22,8 +16,7 @@ export function PasswordReset({ available }: { available: boolean }) {
   const [fields, setFields] = useState<Record<string, string>>({});
   const [usable, setUsable] = useState(available);
   useEffect(() => {
-    const selected =
-      localStorage.getItem("homematch-theme") === "light" ? "light" : "dark";
+    const selected = initialTheme(localStorage.getItem("homematch-theme"));
     document.documentElement.dataset.theme = selected;
     queueMicrotask(() => setTheme(selected));
   }, []);
@@ -87,9 +80,13 @@ export function PasswordReset({ available }: { available: boolean }) {
   return (
     <div className={styles.shell}>
       <header className={styles.header}>
-        <Link className={styles.brand} href="/" prefetch={false}>
-          <Image src="/homematch-logo.svg" alt="" width={32} height={36} />
-          <span>HomeMatch</span>
+        <Link
+          className={styles.brand}
+          href="/"
+          prefetch={false}
+          aria-label="HomeMatch home"
+        >
+          <Wordmark />
         </Link>
         <button
           aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
@@ -97,7 +94,7 @@ export function PasswordReset({ available }: { available: boolean }) {
           onClick={() => {
             const next = theme === "dark" ? "light" : "dark";
             setTheme(next);
-            document.documentElement.dataset.theme = next;
+            applyTheme(next);
             localStorage.setItem("homematch-theme", next);
           }}
         >
@@ -105,9 +102,11 @@ export function PasswordReset({ available }: { available: boolean }) {
         </button>
       </header>
       <main className={styles.main}>
+        <div className={styles.door} aria-hidden="true">
+          <span />
+        </div>
         {message ? (
           <>
-            <CheckCircle2 className={styles.symbol} />
             <h1>Password reset</h1>
             <p role="status">{message}</p>
             <Link
@@ -120,7 +119,6 @@ export function PasswordReset({ available }: { available: boolean }) {
           </>
         ) : !usable ? (
           <>
-            <KeyRound className={styles.symbol} />
             <h1>Request a new link</h1>
             <p>
               This recovery link is missing, expired or unavailable. Request a
@@ -141,7 +139,6 @@ export function PasswordReset({ available }: { available: boolean }) {
           </>
         ) : (
           <>
-            <KeyRound className={styles.symbol} />
             <h1>Choose a new password</h1>
             <p>
               Use at least 12 characters. You will need to sign in again after

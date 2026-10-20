@@ -1,0 +1,222 @@
+/* Loading, empty, error and missing-page states. Always drawn at night. */
+
+.stage,
+.panel {
+  background: var(--night-deep);
+  color: #eef1ea;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stage {
+  min-height: 100dvh;
+  padding: 48px var(--gutter, 20px);
+}
+
+/* Inside the workspace: fills its area as a rounded night card. */
+.panel {
+  flex: 1;
+  min-height: min(640px, calc(100dvh - var(--workspace-header, 122px) - 32px));
+  height: calc(100% - 32px);
+  margin: 16px;
+  border-radius: 28px;
+  padding: 40px 24px;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+  text-align: center;
+  width: min(580px, 100%);
+}
+
+.title {
+  margin: 0;
+  color: #eef1ea;
+  font-family: var(--font-display), Arial, sans-serif;
+  font-size: clamp(32px, 4vw, 52px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.02;
+}
+
+.body {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.55;
+  color: #c3ccdd;
+}
+
+.body p {
+  margin: 0 0 10px;
+}
+
+.body ul {
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.body li {
+  font-size: 14px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1.5px solid #3a4a6b;
+  background: #16213a;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* Buttons and links on the night stage. */
+.stack .actions > a,
+.stack .actions > button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 12px 22px;
+  border-radius: 999px;
+  border: 1.5px solid #4a5a7c;
+  background: transparent;
+  color: #eef1ea;
+  font-weight: 600;
+  font-size: 16px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.stack .actions > a:hover,
+.stack .actions > button:hover:not(:disabled) {
+  border-color: var(--amber-glow);
+  color: var(--amber-glow);
+  background: transparent;
+}
+
+.stack .actions > :first-child {
+  background: var(--amber);
+  border-color: var(--amber);
+  color: var(--navy);
+}
+
+.stack .actions > :first-child:hover:not(:disabled) {
+  background: var(--amber-glow);
+  border-color: var(--amber-glow);
+  color: var(--navy);
+}
+
+.stack .actions svg {
+  width: 18px;
+  height: 18px;
+}
+
+.block {
+  background: #172440;
+  border-radius: 4px 4px 0 0;
+  padding: 18px 16px 22px;
+  display: grid;
+  gap: 10px;
+}
+
+.unlit {
+  border-radius: 2px;
+  background: #22304d;
+}
+
+.wave {
+  animation: wave 2.8s ease-in-out infinite;
+}
+
+@keyframes wave {
+  0%,
+  100% {
+    background: #22304d;
+    box-shadow: none;
+  }
+  40%,
+  60% {
+    background: var(--amber-glow);
+    box-shadow: 0 0 12px rgba(255, 196, 107, 0.7);
+  }
+}
+
+.flicker {
+  border-radius: 2px;
+  animation: flicker 3s steps(1) infinite;
+}
+
+@keyframes flicker {
+  0%,
+  18%,
+  22%,
+  62%,
+  100% {
+    background: var(--amber-glow);
+    box-shadow: 0 0 14px rgba(255, 196, 107, 0.8);
+  }
+  20%,
+  60%,
+  64%,
+  80% {
+    background: #22304d;
+    box-shadow: none;
+  }
+}
+
+.warm,
+.sage,
+.gap {
+  width: 24px;
+  height: 28px;
+  border-radius: 3px;
+}
+
+.warm {
+  background: #ffd08a;
+}
+
+.sage {
+  background: #7e9c8b;
+}
+
+.gap {
+  background: transparent;
+  border: 2px dashed var(--navy);
+}
+
+.message {
+  margin: 0;
+  font-family: var(--font-display), Arial, sans-serif;
+  font-size: 22px;
+  font-weight: 600;
+  color: #c3ccdd;
+  animation: msg 0.5s ease both;
+}
+
+@keyframes msg {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wave,
+  .flicker,
+  .message {
+    animation: none;
+  }
+}

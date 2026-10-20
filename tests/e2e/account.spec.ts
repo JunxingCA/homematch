@@ -1,5 +1,16 @@
 import { expect, test, type Page } from "@playwright/test";
 import { samplePreference } from "../../src/domain/fixtures";
+
+test.beforeEach(async ({ page }) => {
+  // HomeMatch follows the time of day until a theme is chosen; these checks start at night.
+  await page.addInitScript(() => {
+    if (!localStorage.getItem("homematch-theme"))
+      localStorage.setItem("homematch-theme", "dark");
+    // The launch intro and the match reveal play once per session; these checks start after them.
+    sessionStorage.setItem("homematch-intro-seen", "1");
+    sessionStorage.setItem("homematch-reveal-seen", "1");
+  });
+});
 const owner = "11111111-1111-4111-8111-111111111111";
 async function fixture(
   page: Page,
@@ -74,13 +85,10 @@ async function fixture(
   await expect(
     page.getByRole("button", { name: "Account settings", exact: true }),
   ).toBeVisible();
+  // The workspace tab counts saved profiles; deletion must clear them from view.
   await expect(
-    page.getByRole("button", {
-      name: "Private fixture research",
-      exact: true,
-      includeHidden: true,
-    }),
-  ).toHaveCount(1);
+    page.getByRole("button", { name: "My profiles 1/4", exact: true }),
+  ).toBeVisible();
   return calls;
 }
 async function openDelete(page: Page) {
@@ -144,7 +152,7 @@ test("confirmation, cancellation, focus and light/dark responsive account settin
     page.getByRole("button", { name: "Account settings", exact: true }),
   ).toHaveCount(0);
   await expect(
-    page.getByRole("button", { name: "Private fixture research", exact: true }),
+    page.getByRole("button", { name: "My profiles 1/4", exact: true }),
   ).toHaveCount(0);
   expect(calls.deletes).toBe(1);
 });
@@ -183,7 +191,7 @@ test("unconfirmed deletion clears visible private data without claiming success"
     page.getByRole("alert").filter({ hasText: "could not be confirmed" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Private fixture research", exact: true }),
+    page.getByRole("button", { name: "My profiles 1/4", exact: true }),
   ).toHaveCount(0);
   await expect(
     page.getByRole("button", { name: "Account settings", exact: true }),

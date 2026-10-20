@@ -3,18 +3,18 @@ import localFont from "next/font/local";
 import { PwaProvider } from "@/components/PwaSupport";
 import "./globals.css";
 const bodyFont = localFont({
-  src: "./fonts/DMSans.ttf",
+  src: "./fonts/SchibstedGrotesk.ttf",
   variable: "--font-body",
-  weight: "100 1000",
+  weight: "400 900",
   display: "swap",
   fallback: ["Arial", "sans-serif"],
 });
-const scriptFont = localFont({
-  src: "./fonts/PlaywriteGBS.ttf",
-  variable: "--font-script",
-  weight: "100 400",
+const displayFont = localFont({
+  src: "./fonts/BricolageGrotesque.ttf",
+  variable: "--font-display",
+  weight: "200 800",
   display: "swap",
-  fallback: ["Georgia", "serif"],
+  fallback: ["Arial", "sans-serif"],
 });
 export const metadata: Metadata = {
   title: "HomeMatch | Find your area",
@@ -28,18 +28,14 @@ export const metadata: Metadata = {
     ],
   },
 };
-export const viewport: Viewport = { themeColor: "#151313" };
+export const viewport: Viewport = { themeColor: "#101a2e" };
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <html
-      lang="en"
-      data-palette="red"
-      className={`${bodyFont.variable} ${scriptFont.variable}`}
-    >
+    <html lang="en" className={`${bodyFont.variable} ${displayFont.variable}`}>
       <body>
         <PwaProvider>{children}</PwaProvider>
       </body>

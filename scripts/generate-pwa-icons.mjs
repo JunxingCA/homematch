@@ -1,11 +1,13 @@
 import { createRequire } from "node:module";
 import { mkdir, readFile } from "node:fs/promises";
 
-// Use Next's existing image dependency; the source is our existing vector logo.
+// Use Next's existing image dependency; the source is the "Lights On" night logo.
 const require = createRequire(import.meta.resolve("next/package.json"));
 const sharp = require("sharp");
 const root = new URL("../", import.meta.url);
-const logo = await readFile(new URL("public/homematch-logo.svg", root));
+const logo = await readFile(
+  new URL("public/homematch-logo-lights-night.svg", root),
+);
 const directory = new URL("public/pwa/", root);
 await mkdir(directory, { recursive: true });
 for (const [name, size, ratio] of [
@@ -16,11 +18,15 @@ for (const [name, size, ratio] of [
   ["favicon-32.png", 32, 0.9],
 ]) {
   const mark = await sharp(logo)
-    .resize(Math.round(size * ratio))
+    .resize({
+      width: Math.round(size * ratio),
+      height: Math.round(size * ratio),
+      fit: "inside",
+    })
     .png()
     .toBuffer();
   await sharp({
-    create: { width: size, height: size, channels: 4, background: "#151313" },
+    create: { width: size, height: size, channels: 4, background: "#101a2e" },
   })
     .composite([{ input: mark, gravity: "centre" }])
     .png()

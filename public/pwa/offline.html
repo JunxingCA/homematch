@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#151313" />
+    <meta name="theme-color" content="#101a2e" />
     <meta name="robots" content="noindex" />
     <title>HomeMatch | Reconnect</title>
     <link rel="stylesheet" href="/pwa/offline.css" />
@@ -11,9 +11,16 @@
   </head>
   <body>
     <main>
-      <img src="/homematch-logo.svg" alt="" width="64" height="64" />
-      <p class="brand">Home<span>Match</span></p>
-      <p class="label">CONNECTION UNAVAILABLE</p>
+      <p class="brand">
+        <img src="/homematch-logo.svg" alt="" width="40" height="40" />
+        homematch
+      </p>
+      <div class="block" aria-hidden="true">
+        <span></span><span></span><span></span> <span></span
+        ><span class="flicker"></span><span></span> <span></span><span></span
+        ><span></span>
+      </div>
+      <p class="chip"><span class="dot"></span>Connection unavailable</p>
       <h1>A connection away.</h1>
       <p>
         Reconnect to open your workspace. Profiles, maps and recommendations

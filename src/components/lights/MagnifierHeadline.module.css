@@ -1,0 +1,58 @@
+.zone {
+  position: relative;
+}
+
+.zone[data-active="true"] {
+  cursor: none;
+}
+
+.headline {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(48px, 6.4vw, 92px);
+  line-height: 0.95;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: var(--ink);
+  text-wrap: balance;
+}
+
+.lens {
+  position: absolute;
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  overflow: hidden;
+  pointer-events: none;
+  background: var(--bg);
+  box-shadow:
+    0 0 0 3px var(--ink),
+    0 0 0 9px rgba(255, 181, 71, 0.55),
+    0 24px 50px var(--shadow);
+  animation: lens-in 0.18s ease-out both;
+  z-index: 5;
+}
+
+@keyframes lens-in {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+}
+
+.inner {
+  position: absolute;
+  transform-origin: 0 0;
+}
+
+.glint {
+  position: absolute;
+  left: 22px;
+  top: 18px;
+  width: 54px;
+  height: 26px;
+  border-radius: 50%;
+  background: #fff;
+  opacity: 0.45;
+  transform: rotate(-28deg);
+}

@@ -1,108 +1,83 @@
+/* HomeMatch "Lights On": night-blue, window-light amber, HDB-facade mint and one
+   coral accent. Dark mode is the night estate; light mode is daytime paper. */
 :root {
+  --amber: #ffb547;
+  --amber-glow: #ffc46b;
+  --amber-soft: #ffe3b5;
+  --amber-pale: #fff5e3;
+  --coral: #e5553b;
+  --mint: #cfe3d6;
+  --sage: #8fb8a0;
+  --navy: #14213d;
+  --navy-2: #1c2a48;
+  --night: #101a2e;
+  --night-deep: #0b1220;
+  --pastel-blue: #d5e4f0;
+  --pastel-pink: #f8d7cf;
+  --pastel-green: #d6eadd;
+  --pastel-lilac: #e6ddf3;
+  --pastel-teal: #d5ecec;
+  --paper: #eef1ea;
+  --gutter: 32px;
+
   color-scheme: dark;
-  --bg: #101313;
-  --panel: #191d1c;
-  --field: #111514;
-  --line: #303835;
-  --text: #f0f4f1;
-  --muted: #a4b1aa;
-  --accent: #68ddb0;
-  --accent-ink: #102d20;
-  --soft: #1b3028;
-  --cyan: #79cbd7;
-  --purple: #b4adf4;
-  --danger: #ffaba9;
-  --warning: #f3d083;
-  --landing-ink: #0d302c;
-  --landing-primary: #103d32;
-  --landing-hover: #185342;
-  --landing-wash: #e1f0ed;
+  --bg: #0c1424;
+  --ink: #eef1ea;
+  --ink-2: #c3ccdd;
+  --card: #16213a;
+  --card-2: #121c32;
+  --edge: #4a5a7c;
+  --rule: #2a3754;
+  --track: #2a3754;
+  --btn-bg: #ffb547;
+  --btn-fg: #14213d;
+  --band: #111b30;
+  --band-card: #1a2846;
+  --shadow: rgba(0, 0, 0, 0.5);
+  --logo-win: #9aa6bc;
+  --selected-bg: #ffb547;
+  --selected-fg: #14213d;
+
+  /* Names used by the map, account and recovery components. */
+  --panel: var(--card);
+  --field: var(--card-2);
+  --line: var(--rule);
+  --text: var(--ink);
+  --muted: var(--ink-2);
+  --accent: #ffb547;
+  --accent-ink: #14213d;
+  --soft: #2a3552;
+  --cyan: #8cc4e8;
+  --purple: #c9bdf5;
+  --danger: #ff9e8f;
+  --warning: #ffc46b;
 }
 html[data-theme="light"] {
   color-scheme: light;
-  --bg: #f5f7f6;
-  --panel: #fff;
-  --field: #f8faf9;
-  --line: #d6dfda;
-  --text: #18251f;
-  --muted: #56685e;
-  --accent: #137653;
-  --accent-ink: #fff;
-  --soft: #e8f5ee;
-  --cyan: #257c8b;
-  --purple: #6d55ad;
-  --danger: #a32935;
-  --warning: #805b0c;
-}
-html[data-palette="rose"] {
-  --bg: #151415;
-  --panel: #211e20;
-  --field: #191618;
-  --line: #40383c;
-  --text: #f7f1f2;
-  --muted: #bcb0b4;
-  --accent: #ef9bab;
-  --accent-ink: #36101e;
-  --soft: #342127;
-  --cyan: #83ced8;
-  --purple: #c3ce87;
-  --danger: #ffaaa3;
-  --warning: #e9cc83;
-  --landing-ink: #42202d;
-  --landing-primary: #8c2e4c;
-  --landing-hover: #6e233c;
-  --landing-wash: #f1e7ed;
-}
-html[data-palette="rose"][data-theme="light"] {
-  --bg: #faf7f8;
-  --panel: #ffffff;
-  --field: #fdfafb;
-  --line: #e5d8dd;
-  --text: #30242a;
-  --muted: #725b66;
-  --accent: #993454;
-  --accent-ink: #ffffff;
-  --soft: #f6e8ee;
-  --cyan: #267c8c;
-  --purple: #667525;
-  --danger: #ad293a;
-  --warning: #805b0c;
-}
-html[data-palette="red"] {
-  --bg: #151313;
-  --panel: #211c1c;
-  --field: #191616;
-  --line: #443737;
-  --text: #faf3f2;
-  --muted: #c2b1af;
-  --accent: #ef7276;
-  --accent-ink: #31080e;
-  --soft: #3a2024;
-  --cyan: #83ced8;
-  --purple: #c3ce87;
-  --danger: #ffaaa3;
-  --warning: #e9cc83;
-  --landing-ink: #48171d;
-  --landing-primary: #ad1e30;
-  --solid-action: #ad1e30;
-  --solid-action-ink: #ffffff;
-  --landing-hover: #861324;
-  --landing-wash: #f5e8e7;
-}
-html[data-palette="red"][data-theme="light"] {
-  --bg: #faf8f8;
-  --panel: #ffffff;
-  --field: #fdfafa;
-  --line: #e7d8d8;
-  --text: #312426;
-  --muted: #71595c;
-  --accent: #ad1e30;
-  --accent-ink: #ffffff;
-  --soft: #f8e8ea;
-  --cyan: #267c8c;
-  --purple: #667525;
-  --danger: #a51b26;
-  --warning: #805b0c;
+  --bg: #eef1ea;
+  --ink: #14213d;
+  --ink-2: #2d3a55;
+  --card: #ffffff;
+  --card-2: #f8f9f5;
+  --edge: #14213d;
+  --rule: #d6ddd3;
+  --track: #d6ddd3;
+  --btn-bg: #14213d;
+  --btn-fg: #eef1ea;
+  --band: #14213d;
+  --band-card: #1a2846;
+  --shadow: rgba(20, 33, 61, 0.22);
+  --logo-win: #3a4a6b;
+  --selected-bg: #14213d;
+  --selected-fg: #eef1ea;
+
+  --accent: #14213d;
+  --accent-ink: #eef1ea;
+  --soft: #ffe3b5;
+  --cyan: #1f6f8b;
+  --purple: #5b4aa0;
+  --danger: #b3261e;
+  --warning: #7a5200;
 }
 * {
   box-sizing: border-box;
@@ -170,14 +145,21 @@ h3,
 p {
   margin: 0;
 }
+h1,
+h2 {
+  font-family: var(--font-display), Arial, sans-serif;
+  font-variant-numeric: tabular-nums;
+}
 h1 {
   font-size: 32px;
-  line-height: 1.2;
-  font-weight: 600;
+  line-height: 1.1;
+  font-weight: 800;
+  letter-spacing: -0.03em;
 }
 h2 {
-  font-size: 18px;
-  font-weight: 600;
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 h3 {
   font-size: 15px;
@@ -215,4 +197,212 @@ button svg {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* Shared "Lights On" building blocks. Small labels always sit in a chip or tag. */
+.wrap {
+  width: 100%;
+  max-width: 1320px;
+  margin: 0 auto;
+  padding-inline: var(--gutter);
+}
+
+@media (max-width: 640px) {
+  :root {
+    --gutter: 16px;
+  }
+}
+
+.display {
+  font-family: var(--font-display), Arial, sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--card);
+  border: 1.5px solid var(--edge);
+  border-radius: 999px;
+  padding: 6px 13px 6px 9px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+@media (max-width: 640px) {
+  .chip {
+    white-space: normal;
+  }
+}
+
+.chip--soft {
+  background: var(--amber-soft);
+  color: var(--navy);
+  border-color: var(--navy);
+}
+
+.chip--dark {
+  background: var(--navy-2);
+  border-color: #3a4a6b;
+  color: #eef1ea;
+}
+
+.dot {
+  display: inline-block;
+  width: 9px;
+  height: 11px;
+  border-radius: 2px;
+  background: var(--amber);
+  flex: none;
+}
+
+.tag {
+  display: inline-block;
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--navy);
+  background: var(--amber-soft);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 14px 26px;
+  border-radius: 999px;
+  border: 0;
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  font-weight: 600;
+  font-size: 17px;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px var(--shadow);
+}
+
+.btn--ghost {
+  background: var(--card);
+  color: var(--ink);
+  border: 1.5px solid var(--edge);
+}
+
+.btn--ghost:hover {
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+}
+
+.btn--amber {
+  background: var(--amber);
+  color: var(--navy);
+  font-weight: 700;
+}
+
+.btn--small {
+  min-height: 42px;
+  padding: 10px 18px;
+  font-size: 15px;
+}
+
+.seg-group {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--card);
+  border: 1.5px solid var(--edge);
+}
+
+.seg {
+  border: 0;
+  min-height: 44px;
+  min-width: 56px;
+  padding: 10px 15px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  background: transparent;
+  color: var(--ink);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  /* Text colour switches instantly so contrast holds while themes change. */
+  transition: background 0.18s;
+}
+
+.seg[aria-pressed="true"] {
+  background: var(--selected-bg);
+  color: var(--selected-fg);
+}
+
+.h-section {
+  margin: 0;
+  font-family: var(--font-display), Arial, sans-serif;
+  font-size: clamp(36px, 4.4vw, 60px);
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.h-page {
+  margin: 0;
+  font-family: var(--font-display), Arial, sans-serif;
+  font-size: clamp(40px, 4.6vw, 64px);
+  line-height: 0.95;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+
+/* Scroll-driven entrance where supported; content is simply visible elsewhere. */
+@supports (animation-timeline: view()) {
+  .reveal-on-scroll {
+    animation: reveal-rise linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 28%;
+  }
+}
+
+@keyframes reveal-rise {
+  from {
+    opacity: 0;
+    transform: translateY(48px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Set for one frame while the theme changes (see applyTheme). */
+html[data-theme-switching] *,
+html[data-theme-switching] *::before,
+html[data-theme-switching] *::after {
+  transition: none !important;
 }

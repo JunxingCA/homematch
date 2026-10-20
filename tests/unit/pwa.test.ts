@@ -127,7 +127,7 @@ describe("public-only PWA", () => {
         cache: "reload",
         redirect: "error",
       });
-    expect([...w.storage.get("homematch-offline-v2")!.keys()]).toEqual(assets);
+    expect([...w.storage.get("homematch-offline-v3")!.keys()]).toEqual(assets);
     expect(w.skipWaiting).not.toHaveBeenCalled();
   });
   it("fails installation if an offline asset is unavailable", async () => {
@@ -183,7 +183,7 @@ describe("public-only PWA", () => {
       expect(await (await w.request(path, "navigate"))?.text()).toBe(
         "Public /pwa/offline.html",
       );
-      expect([...w.storage.get("homematch-offline-v2")!.keys()]).toEqual(
+      expect([...w.storage.get("homematch-offline-v3")!.keys()]).toEqual(
         assets,
       );
     },
@@ -202,7 +202,7 @@ describe("public-only PWA", () => {
     w.storage.set("another-application", new Map());
     await w.lifecycle("activate");
     expect([...w.storage.keys()]).toEqual([
-      "homematch-offline-v2",
+      "homematch-offline-v3",
       "another-application",
     ]);
     expect(w.claim).toHaveBeenCalledOnce();

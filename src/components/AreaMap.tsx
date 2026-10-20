@@ -255,7 +255,6 @@ export default function AreaMap({
         {discovery.results
           .filter((r) => visibleAreas.includes(r.area.id))
           .map((r) => {
-            const rank = discovery.results.indexOf(r) + 1;
             const label =
               markerMode === "area"
                 ? r.area.name
@@ -280,7 +279,7 @@ export default function AreaMap({
                   html:
                     markerMode === "area"
                       ? `<span class="${styles.pin} ${styles.areaPin} ${active ? styles.selected : ""}"><span class="${styles.areaName}">${escapeMarkup(label)}</span><span class="${styles.compactArea}">A</span></span>`
-                      : `<span class="${styles.pin} ${active ? styles.selected : ""}"><small>${rank}</small>${escapeMarkup(label)}</span>`,
+                      : `<span class="${styles.pin} ${active ? styles.selected : ""}"><i class="${styles.window}"></i>${escapeMarkup(label)}</span>`,
                   iconSize: [markerMode === "area" ? 36 : 82, 36],
                   iconAnchor: [markerMode === "area" ? 18 : 41, 42],
                 })}

@@ -1,4 +1,15 @@
 import { expect, test } from "@playwright/test";
+
+test.beforeEach(async ({ page }) => {
+  // HomeMatch follows the time of day until a theme is chosen; these checks start at night.
+  await page.addInitScript(() => {
+    if (!localStorage.getItem("homematch-theme"))
+      localStorage.setItem("homematch-theme", "dark");
+    // The launch intro and the match reveal play once per session; these checks start after them.
+    sessionStorage.setItem("homematch-intro-seen", "1");
+    sessionStorage.setItem("homematch-reveal-seen", "1");
+  });
+});
 const token = "c".repeat(64);
 test("auth callbacks and the reset page suppress referrers and caching in the actual server", async ({
   request,
@@ -52,7 +63,7 @@ test("forgot password preserves manual preferences and supports email failure/re
   });
   await page.goto("/");
   await page
-    .getByRole("button", { name: "Preview planner", exact: true })
+    .getByRole("button", { name: "Preview planner without an account" })
     .click();
   await page.getByLabel("Maximum budget (SGD)").fill("720000");
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
