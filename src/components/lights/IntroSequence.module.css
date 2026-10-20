@@ -1,0 +1,289 @@
+.gate {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: var(--night-deep);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  padding: 24px;
+  text-align: center;
+}
+
+.gateWindow {
+  animation: breathe 2.4s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    fill: #3a4a6b;
+  }
+  50% {
+    fill: #7a6440;
+  }
+}
+
+.gateLine {
+  margin: 0;
+  color: #eef1ea;
+  font-family: var(--font-display);
+  font-size: clamp(28px, 3.4vw, 44px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  max-width: 640px;
+  line-height: 1.1;
+}
+
+.enter {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--amber);
+  color: var(--navy);
+  border: 0;
+  border-radius: 999px;
+  padding: 18px 30px;
+  font-weight: 700;
+  font-size: 18px;
+  cursor: pointer;
+  animation: invite 2.4s ease-out infinite;
+}
+
+.enter:hover {
+  transform: translateY(-2px);
+}
+
+@keyframes invite {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 181, 71, 0.45);
+  }
+  100% {
+    box-shadow: 0 0 0 22px rgba(255, 181, 71, 0);
+  }
+}
+
+.quiet {
+  background: transparent;
+  border: 0;
+  color: #c3ccdd;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  padding: 12px;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.quiet:hover {
+  color: var(--amber-glow);
+}
+
+.intro {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: var(--night);
+  overflow: hidden;
+  animation: curtain 7.2s cubic-bezier(0.7, 0, 0.2, 1) forwards;
+}
+
+@keyframes curtain {
+  0%,
+  86% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-100%);
+  }
+}
+
+.skyline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 22px;
+  padding: 0 24px;
+  animation: rise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes rise {
+  from {
+    transform: translateY(60px);
+    opacity: 0;
+  }
+}
+
+.block {
+  flex: none;
+  background: #172440;
+  border-radius: 3px 3px 0 0;
+  display: grid;
+  gap: 12px 10px;
+  padding: 22px 18px 28px;
+}
+
+.win {
+  width: 14px;
+  height: 18px;
+  background: #1f2c47;
+  border-radius: 1px;
+}
+
+.on {
+  animation: lightup 0.45s ease-out forwards;
+}
+
+@keyframes lightup {
+  to {
+    background: var(--amber-glow);
+    box-shadow: 0 0 14px rgba(255, 190, 90, 0.55);
+  }
+}
+
+.tagline {
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  top: 22vh;
+  margin: 0 auto;
+  max-width: 900px;
+  text-align: center;
+  color: #eef1ea;
+  font-family: var(--font-display);
+  font-size: clamp(26px, 3.4vw, 46px);
+  font-weight: 400;
+  line-height: 1.15;
+  opacity: 0;
+  animation: tagline 2.2s ease 1.7s forwards;
+}
+
+@keyframes tagline {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  20%,
+  78% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+.mark {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 17vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+  padding: 0 24px;
+}
+
+.lockup {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.markDrop {
+  display: inline-flex;
+  opacity: 0;
+  animation: drop 0.7s cubic-bezier(0.3, 1.5, 0.5, 1) 4s forwards;
+}
+
+@keyframes drop {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.markWindow {
+  animation: winlit 0.8s ease 4.7s both;
+}
+
+@keyframes winlit {
+  from {
+    fill: #3a4a6b;
+  }
+  to {
+    fill: #ffc46b;
+  }
+}
+
+.word {
+  color: #eef1ea;
+  font-family: var(--font-display);
+  font-size: clamp(54px, 8vw, 108px);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 1;
+  opacity: 0;
+  animation: wordin 0.7s ease 4.35s forwards;
+}
+
+.word:global(.chip) {
+  font-family: var(--font-body);
+  font-size: 14px;
+  letter-spacing: 0;
+}
+
+@keyframes wordin {
+  from {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.controls {
+  position: absolute;
+  right: 28px;
+  bottom: 28px;
+  display: flex;
+  gap: 10px;
+}
+
+.ibtn {
+  background: rgba(16, 26, 46, 0.6);
+  border: 1.5px solid rgba(238, 241, 234, 0.45);
+  color: #eef1ea;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 12px 20px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.ibtn:hover {
+  border-color: var(--amber-glow);
+  color: var(--amber-glow);
+}
+
+@media (max-width: 640px) {
+  .controls {
+    right: 16px;
+    left: 16px;
+    justify-content: center;
+  }
+}

@@ -3,6 +3,17 @@ import axe from "axe-core";
 import { writeFile } from "node:fs/promises";
 import { description, interpreted } from "../fixtures/interpretation";
 
+test.beforeEach(async ({ page }) => {
+  // HomeMatch follows the time of day until a theme is chosen; these checks start at night.
+  await page.addInitScript(() => {
+    if (!localStorage.getItem("homematch-theme"))
+      localStorage.setItem("homematch-theme", "dark");
+    // The launch intro and the match reveal play once per session; these checks start after them.
+    sessionStorage.setItem("homematch-intro-seen", "1");
+    sessionStorage.setItem("homematch-reveal-seen", "1");
+  });
+});
+
 declare global {
   interface Window {
     axe: typeof axe;

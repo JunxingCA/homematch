@@ -1,19 +1,45 @@
 # Signed-Out HomeMatch Entrance
 
-## Alternative Palette Preview
+## "Lights On" Entrance (UI redesign, October 2026)
 
-`/welcome?palette=red` adds a deeper crimson option with charcoal/white surfaces,
-matching HomeMatch logo and cyan/olive supporting tones. It is a visual direction
-inspired by the user's HDB/Singpass reference, not government branding, affiliation
-or a Singpass integration. Rose and emerald remain separate comparison options.
+The signed-out entrance now uses the "Lights On" identity: night-blue, window-light
+amber and HDB-facade mint, Bricolage Grotesque headings and Schibsted Grotesk body
+text (bundled locally, see `src/app/fonts/README.md`). The red, rose and emerald
+`?palette=` previews and the Unsplash hero photo were retired with the old layout.
 
-Open `/welcome?palette=rose` for a rose/cranberry accent with charcoal dark surfaces,
-soft white light surfaces, cyan and olive supporting tones. It applies to the
-landing, existing dialogs and planner without changing scores or user data.
-Use `/welcome?palette=emerald` to restore the original. The palette selector is a
-preview URL, not a persistent user setting; no new localStorage record is created.
-Deployment status is recorded in VERCEL_DEPLOYMENT.md; preview URLs do not enable
-additional account or provider permissions.
+- Launch intro: a gate ("Turn the lights on" / "Enter without sound") is needed so
+  browsers allow sound; the city then lights up window by window, the logo window
+  lights and the curtain lifts. Sound is synthesised with Web Audio (no audio
+  files). It plays once per session (`homematch-intro-seen` and the sound choice
+  `homematch-sound` are sessionStorage flags; nothing personal is stored) and is
+  skipped entirely for `prefers-reduced-motion`. "↺ Intro" replays it.
+- Hero: a 24-second day-to-night "living window" with parallax, a magnifier lens
+  on the headline (mouse only), a trust strip, "Three floors" steps drawn as lit
+  facades, and "Pick a life" presets. Presets only pre-fill lifestyle categories,
+  weights and flat types in the planner; nothing is saved or sent.
+- Theme: Auto (dark 7pm–7am), day or night. Auto stores nothing; an explicit
+  choice is the existing `homematch-theme` localStorage key.
+
+### Workspace, results and states
+
+The signed-in workspace and preview planner use the same design:
+
+- Planner: "Build your ideal block." Six questions (housing type, budget, layouts,
+  weekly places, Must/Nice/Skip for each lifestyle, priorities) drive a block
+  illustration. Must maps to priority 5, Nice to 3, Skip removes the lifestyle.
+- Results: matches light up across the island from each area's real coordinates
+  (once per session via the `homematch-reveal-seen` sessionStorage flag; Replay and
+  Skip; reduced motion skips it). List cards show the overall match as lit windows
+  plus the three component scores. "A weekday in ..." is told only from the search
+  evidence: the routed 08:00 trip, the nearest imported facilities (straight-line
+  walking estimates, labelled as such) and weekly travel time. Comparison opens with
+  one block per area (a floor per score) above the unchanged evidence table.
+- States: loading, empty, no-matches and error screens use a night block whose
+  windows wave, stay dark or flicker; unknown routes show "This unit doesn't
+  exist." with a 404 status; the offline fallback matches (cache `v3`).
+
+E2E checks set `homematch-intro-seen` and `homematch-reveal-seen` in sessionStorage
+so they start after the intro and reveal; dedicated tests cover both.
 
 Started locally 14 October 2026. Not a new identity provider, account model or
 property-listing product. Anonymous production visitors see LandingPage; returning
@@ -21,22 +47,16 @@ signed-in users still open the existing workspace directly. `/welcome` also show
 the entrance and offers Open workspace for existing sessions. Preview mode keeps
 the existing planner unless `/welcome` is selected.
 
-Find my area/Get started opens the existing registration dialog; header Sign in
+Start matching opens the existing registration dialog; header Sign in
 opens the existing login. Google, email, recovery and configured-only Apple reuse
 the original handlers. No key, personal profile or draft is passed through a new
 URL. Preview planner is a transient manual form, not anonymous authenticated data
 access or persistent guest storage. Its existing save/search gates remain in force.
 
-The hero uses a self-hosted Singapore HDB photo by S M (iridescentstars), published
-25 November 2022: https://unsplash.com/photos/a-group-of-tall-buildings-m6WvddK353k
-under the Unsplash License: https://unsplash.com/license . Original delivery:
-https://images.unsplash.com/photo-1669339173801-b4c4d3c277ee . Attribution links are
-in the footer. It illustrates housing, not an advertised unit or current listing.
-
-The user supplied https://riilestate.com as layout inspiration. HomeMatch does not
-copy its brand, property facts, imagery, pricing claims or proprietary service.
-Full-width photography, emerald actions, a restrained cursive accent and two
-housing pathways adapt that direction to the actual area-research application.
+An earlier version took layout inspiration from https://riilestate.com (full-width
+photography, emerald actions, a cursive accent); that layout was replaced by the
+"Lights On" redesign above. HomeMatch does not copy any listing site's brand,
+property facts, imagery, pricing claims or proprietary service.
 
 Future property-card request is recorded separately in FUTURE_PROPERTY_DETAILS.md.
 The dated group PDF is unchanged. Current release status is recorded here and in

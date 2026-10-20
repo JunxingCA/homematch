@@ -1,0 +1,589 @@
+/* Workspace frame: header, notices and the non-map screens. */
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px 18px;
+  flex-wrap: wrap;
+  padding-top: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.brand {
+  text-decoration: none;
+  color: var(--ink);
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.navItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1.5px solid transparent;
+  background: transparent;
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.navItem:hover {
+  border-color: var(--edge);
+}
+
+.navItem[aria-current="page"] {
+  background: var(--selected-bg);
+  color: var(--selected-fg);
+}
+
+.navItem svg {
+  width: 17px;
+  height: 17px;
+}
+
+.count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 26px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--amber-soft);
+  color: var(--navy);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* The preview notice and account dialog carry this on narrower screens. */
+@media (max-width: 1499px) {
+  .mode,
+  .email {
+    display: none;
+  }
+}
+
+.email {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.iconButton {
+  flex: none;
+  width: 42px;
+  height: 42px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1.5px solid var(--edge);
+  background: var(--card);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.iconButton:hover:not(:disabled) {
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+}
+
+.iconButton svg {
+  width: 18px;
+  height: 18px;
+}
+
+.main {
+  padding-top: 28px;
+  padding-bottom: 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  color: var(--ink);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.notice,
+.alert,
+.message {
+  margin: 0;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  border-radius: 14px;
+  padding: 12px 16px;
+  font-weight: 600;
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+
+.notice {
+  background: var(--amber-soft);
+  color: var(--navy);
+  border: 1.5px solid var(--navy);
+}
+
+.notice svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+}
+
+.alert {
+  flex-direction: column;
+  background: var(--pastel-pink);
+  color: var(--navy);
+  border: 1.5px solid var(--coral);
+}
+
+.alert ul {
+  margin: 0;
+  padding-left: 20px;
+  font-weight: 500;
+}
+
+.message {
+  background: var(--card);
+  border: 1.5px solid var(--edge);
+}
+
+.message[data-warning="true"] {
+  background: var(--pastel-pink);
+  color: var(--navy);
+  border-color: var(--coral);
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.pageHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.lede {
+  margin: 10px 0 0;
+  font-size: 18px;
+  color: var(--ink-2);
+  max-width: 620px;
+}
+
+.small {
+  margin: 0;
+  font-size: 14px;
+  color: var(--ink-2);
+}
+
+.split {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 48px;
+  align-items: flex-start;
+}
+
+.splitMain {
+  flex: 999 1 560px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.splitAside {
+  flex: 1 1 380px;
+  min-width: 0;
+}
+
+.sentenceCard {
+  background: var(--card);
+  border: 1.5px solid var(--edge);
+  border-radius: 18px;
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  box-shadow: 4px 4px 0 var(--edge);
+}
+
+.sentenceCard p {
+  margin: 0;
+  font-family: var(--font-display), Arial, sans-serif;
+  font-size: 24px;
+  line-height: 1.35;
+}
+
+.card {
+  background: var(--card);
+  border: 1.5px solid var(--edge);
+  border-radius: 20px;
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.cardHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.cardHead h2 {
+  font-size: 22px;
+}
+
+.review {
+  margin: 0;
+  display: grid;
+  gap: 0;
+}
+
+.review > div {
+  display: grid;
+  grid-template-columns: minmax(0, 220px) minmax(0, 1fr);
+  gap: 6px 18px;
+  padding: 14px 0;
+  border-top: 1px dashed var(--rule);
+}
+
+.review dt {
+  font-weight: 700;
+}
+
+.review dd {
+  margin: 0;
+}
+
+.review dd p {
+  margin: 2px 0 0;
+  color: var(--ink-2);
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  border-top: 1.5px solid var(--edge);
+  padding-top: 24px;
+}
+
+.doneCard {
+  background: var(--night);
+  color: #eef1ea;
+  border-radius: 24px;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.doneCard h2 {
+  font-size: 30px;
+}
+
+.doneCard p {
+  margin: 0;
+  color: #d3dae6;
+  font-size: 17px;
+}
+
+.doneCard .small {
+  color: #c3ccdd;
+}
+
+.doneWindow {
+  width: 34px;
+  height: 42px;
+  border-radius: 4px;
+  background: var(--amber-glow);
+  box-shadow: 0 0 26px rgba(255, 196, 107, 0.8);
+  animation: glow-in 0.9s ease both;
+}
+
+@keyframes glow-in {
+  from {
+    background: #2a3754;
+    box-shadow: none;
+  }
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  background: var(--card);
+  border: 1.5px dashed var(--edge);
+  border-radius: 20px;
+  padding: 28px;
+}
+
+.empty p {
+  margin: 0;
+  color: var(--ink-2);
+}
+
+.emptyBlock {
+  display: grid;
+  grid-template-columns: repeat(3, 14px);
+  gap: 6px;
+  background: var(--night);
+  padding: 10px;
+  border-radius: 6px 6px 0 0;
+}
+
+.emptyBlock i {
+  width: 14px;
+  height: 16px;
+  border-radius: 2px;
+  background: #2a3754;
+}
+
+.profileGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 18px;
+}
+
+.profile {
+  background: var(--card);
+  border: 1.5px solid var(--edge);
+  border-radius: 20px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s;
+}
+
+.profile:hover {
+  transform: translate(-3px, -3px);
+  box-shadow: 3px 3px 0 var(--edge);
+}
+
+.profile h2 {
+  font-size: 22px;
+}
+
+.profileTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.miniBlock {
+  display: grid;
+  grid-template-columns: repeat(3, 12px);
+  gap: 4px;
+  background: var(--mint);
+  padding: 6px;
+  border-radius: 4px 4px 0 0;
+}
+
+.miniBlock i {
+  width: 12px;
+  height: 13px;
+  border-radius: 2px;
+}
+
+.draft {
+  background: var(--pastel-pink);
+}
+
+.profileActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 6px;
+}
+
+.historyList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.historyItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  border: 1.5px solid var(--rule);
+  background: var(--card-2);
+  color: var(--ink);
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.historyItem span:nth-child(2) {
+  flex: 1;
+}
+
+.historyItem:hover:not(:disabled) {
+  border-color: var(--edge);
+}
+
+.historyItem svg {
+  width: 18px;
+  height: 18px;
+}
+
+.textButton {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+
+/* On map screens the notice rides in the header, so the measured header height includes it. */
+.headerNotice {
+  flex-basis: 100%;
+  order: 4;
+}
+
+.headerNotice .notice {
+  padding: 6px 12px;
+  font-size: 13px;
+  border-radius: 10px;
+}
+
+.headerNotice .notice svg {
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+}
+
+/* Map screens fill the space under the header. */
+.mapMain {
+  padding: 0;
+  max-width: none;
+  position: relative;
+  min-width: 0;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.mapMain > .alert {
+  position: absolute;
+  top: 64px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: calc(100% - 24px);
+  z-index: 1100;
+  box-shadow: 0 6px 24px #0003;
+}
+
+@media (max-width: 760px) {
+  /* Phones: mark and icon tools on one row, the three tabs on the next. */
+  .header {
+    padding-top: 10px;
+    padding-bottom: 10px;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .brand {
+    order: 1;
+  }
+  .brand [class*="word"] {
+    display: none;
+  }
+  .tools {
+    order: 2;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .nav {
+    order: 3;
+    flex-basis: 100%;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    gap: 4px;
+  }
+  .navItem {
+    min-height: 38px;
+    padding: 6px 8px;
+    font-size: 13px;
+    gap: 5px;
+    white-space: nowrap;
+  }
+  .navItem svg {
+    display: none;
+  }
+  .iconButton,
+  .tools [class*="icon"] {
+    width: 36px;
+    height: 36px;
+    flex-basis: 36px;
+  }
+  .tools [role="group"] button {
+    min-width: 34px !important;
+    min-height: 32px !important;
+    padding: 6px 8px !important;
+  }
+  .tools [data-theme-label] {
+    display: none;
+  }
+  .headerNotice .notice {
+    font-size: 12px;
+    padding: 5px 10px;
+  }
+  .email {
+    display: none;
+  }
+  .review > div {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Small phones: the sign-in button keeps its name but shows only the icon. */
+@media (max-width: 400px) {
+  .signInText {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}

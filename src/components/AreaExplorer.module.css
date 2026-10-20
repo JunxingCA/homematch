@@ -1,19 +1,20 @@
 .explorer {
-  color: var(--text);
+  color: var(--ink);
 }
 .toolbar {
   display: flex;
   align-items: center;
   gap: 16px;
   padding: 12px 20px;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--rule);
 }
 .toolbar h1 {
-  font-size: 18px;
+  font-size: 24px;
+  letter-spacing: -0.02em;
 }
 .toolbar p {
-  font-size: 12px;
-  color: var(--muted);
+  font-size: 13px;
+  color: var(--ink-2);
   margin-top: 3px;
   overflow-wrap: anywhere;
 }
@@ -22,13 +23,19 @@
   align-items: center;
   justify-content: center;
   gap: 7px;
-  min-height: 38px;
-  padding: 8px 10px;
-  background: var(--panel);
-  color: var(--text);
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  font-size: 12px;
+  min-height: 40px;
+  padding: 8px 16px;
+  background: var(--card);
+  color: var(--ink);
+  border: 1.5px solid var(--edge);
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.explorer button:hover:not(:disabled) {
+  background: var(--btn-bg);
+  color: var(--btn-fg);
 }
 .explorer button svg {
   width: 17px;
@@ -37,16 +44,20 @@
 }
 .scope {
   padding: 10px 20px;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--rule);
 }
 .scope strong {
-  color: var(--accent);
-  font-size: 12px;
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--amber-soft);
+  color: var(--navy);
+  font-size: 13px;
 }
 .scope p {
-  color: var(--muted);
-  font-size: 11px;
-  margin-top: 3px;
+  color: var(--ink-2);
+  font-size: 13px;
+  margin-top: 6px;
 }
 .rankingFilters {
   display: flex;
@@ -54,25 +65,26 @@
   align-items: end;
   gap: 10px 14px;
   padding: 12px 20px;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--rule);
 }
 .rankingFilters label {
   display: grid;
   gap: 5px;
   min-width: 0;
-  font-size: 11px;
+  font-size: 13px;
+  font-weight: 600;
   flex: 1 1 130px;
 }
 .rankingFilters input:not([type="checkbox"]),
 .rankingFilters select {
   width: 100%;
   min-width: 0;
-  padding: 8px;
-  border: 1px solid var(--line);
-  background: var(--bg);
-  color: var(--text);
-  border-radius: 4px;
-  font-size: 12px;
+  padding: 9px 12px;
+  border: 1.5px solid var(--edge);
+  background: var(--card-2);
+  color: var(--ink);
+  border-radius: 12px;
+  font-size: 14px;
 }
 .rankingFilters .archive {
   display: flex;
@@ -84,17 +96,18 @@
 }
 .rankingFilters p {
   width: 100%;
-  font-size: 11px;
-  color: var(--muted);
+  font-size: 13px;
+  color: var(--ink-2);
   line-height: 1.5;
 }
 .rankingFilters button {
-  border-color: var(--accent);
-  color: var(--accent);
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  border-color: var(--btn-bg);
 }
 .workspace {
   position: relative;
-  height: calc(100dvh - 244px);
+  height: calc(100dvh - var(--workspace-header, 122px) - 122px);
   min-height: 560px;
   isolation: isolate;
 }
@@ -108,11 +121,11 @@
   top: 14px;
   bottom: 64px;
   overflow: auto;
-  padding: 16px;
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  box-shadow: 0 6px 25px #0002;
+  padding: 18px;
+  background: var(--card);
+  border: 1.5px solid var(--edge);
+  border-radius: 22px;
+  box-shadow: 0 10px 30px var(--shadow);
   z-index: 500;
   scrollbar-width: thin;
 }
@@ -126,22 +139,23 @@
 }
 .areaPane h2,
 .detailPane h2 {
-  font-size: 18px;
+  font-size: 26px;
+  letter-spacing: -0.02em;
   margin-bottom: 10px;
 }
 .detailPane h3 {
-  font-size: 13px;
-  margin: 14px 0 8px;
+  font-size: 17px;
+  margin: 16px 0 8px;
 }
 .detailPane p {
-  font-size: 12px;
+  font-size: 13px;
   margin: 7px 0;
   overflow-wrap: anywhere;
 }
 .origin,
 .muted {
-  color: var(--muted);
-  font-size: 11px !important;
+  color: var(--ink-2);
+  font-size: 13px !important;
   line-height: 1.6;
 }
 .search {
@@ -157,12 +171,13 @@
 }
 .search input {
   min-width: 0;
-  padding: 10px;
-  border: 1px solid var(--line);
-  color: var(--text);
-  background: var(--bg);
-  border-radius: 4px;
-  font-size: 12px;
+  flex: 1;
+  padding: 10px 14px;
+  border: 1.5px solid var(--edge);
+  color: var(--ink);
+  background: var(--card-2);
+  border-radius: 999px;
+  font-size: 14px;
 }
 .towns {
   display: grid;
@@ -171,14 +186,17 @@
 .towns button {
   justify-content: flex-start;
   text-align: left;
-  min-height: 56px;
+  min-height: 58px;
   width: 100%;
+  border-radius: 16px;
+  border-color: var(--rule);
+  background: var(--card-2);
 }
 .towns button[aria-pressed="true"],
 .controls button[aria-pressed="true"] {
-  background: var(--accent-soft);
-  color: var(--accent);
-  border-color: var(--accent);
+  background: var(--selected-bg);
+  color: var(--selected-fg);
+  border-color: var(--selected-bg);
 }
 .towns span {
   min-width: 0;
@@ -189,16 +207,17 @@
 .amenity p small {
   display: block;
   margin-top: 4px;
-  color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
+  font-weight: 500;
 }
 .toggle {
   display: flex;
   align-items: center;
   gap: 8px;
-  border-bottom: 1px solid var(--line);
-  padding: 9px 0;
-  font-size: 12px;
+  border-bottom: 1px dashed var(--rule);
+  padding: 10px 0;
+  font-size: 13px;
+  font-weight: 600;
 }
 .toggle input {
   width: 16px;
@@ -213,8 +232,12 @@
 }
 .toggle small {
   margin-left: auto;
-  font-size: 10px;
-  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--card-2);
+  border: 1px solid var(--rule);
 }
 .radius {
   display: flex;
@@ -226,20 +249,22 @@
 .radius select {
   width: 100px;
   margin-left: auto;
-  background: var(--bg);
-  color: var(--text);
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  padding: 8px;
-  font-size: 12px;
+  background: var(--card);
+  color: var(--ink);
+  border: 1.5px solid var(--edge);
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-weight: 600;
 }
 .legend {
   display: flex;
   flex-wrap: wrap;
   gap: 8px 12px;
-  font-size: 10px;
+  font-size: 12px;
+  font-weight: 600;
   padding: 10px 0;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px dashed var(--rule);
 }
 .legend span {
   display: flex;
@@ -255,25 +280,30 @@
   flex-shrink: 0;
 }
 .amenity {
-  padding: 8px 0;
-  border-bottom: 1px solid var(--line);
+  padding: 10px 0;
+  border-bottom: 1px dashed var(--rule);
 }
 .amenity summary {
   display: flex;
   align-items: center;
   gap: 8px;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 14px;
+  font-weight: 600;
 }
 .amenity summary small {
   margin-left: auto;
-  color: var(--muted);
-  font-size: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--card-2);
+  border: 1px solid var(--rule);
 }
 .journeys {
   margin-top: 16px;
   padding-top: 4px;
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--rule);
 }
 .journeys button {
   width: 100%;
@@ -284,23 +314,16 @@
   left: 14px;
   display: flex;
   gap: 4px;
-  padding: 4px;
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 8px;
+  padding: 5px;
+  background: var(--card);
+  border: 1.5px solid var(--edge);
+  border-radius: 999px;
+  box-shadow: 0 10px 30px var(--shadow);
   z-index: 600;
-}
-.state {
-  padding: 30px;
-  min-height: 250px;
-  color: var(--muted);
-}
-.state p {
-  margin-bottom: 14px;
 }
 @media (max-width: 1050px) {
   .workspace {
-    height: calc(100dvh - 266px);
+    height: calc(100dvh - var(--workspace-header, 112px) - 154px);
     min-height: 520px;
   }
   .areaPane,

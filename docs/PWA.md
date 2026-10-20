@@ -31,7 +31,7 @@ loopback origins are trusted for automated tests. Development does not register 
 new worker or remove another app's registrations. An existing worker from a prior
 production test on the same origin can remain; use a separate origin/port for tests.
 
-Exactly four public, credential-free files are cached under `homematch-offline-v1`:
+Exactly four public, credential-free files are cached under `homematch-offline-v3` (v3: "Lights On" offline page and logo, October 2026):
 
 1. `/pwa/offline.html`
 2. `/pwa/offline.css`

@@ -1,0 +1,49 @@
+.meter {
+  background: var(--night);
+  border-radius: 10px;
+  padding: 12px;
+  display: grid;
+  grid-template-columns: repeat(5, 14px);
+  gap: 6px;
+}
+
+.meter span {
+  width: 14px;
+  height: 17px;
+  border-radius: 2px;
+}
+
+.on {
+  background: var(--amber-glow);
+  box-shadow: 0 0 8px rgba(255, 196, 107, 0.6);
+  animation: light 0.4s ease-out both;
+}
+
+.off {
+  background: #2a3754;
+}
+
+@keyframes light {
+  from {
+    background: #2a3754;
+    box-shadow: none;
+  }
+}
+
+.compact {
+  display: inline-grid;
+  border-radius: 6px;
+  padding: 5px;
+  grid-template-columns: repeat(5, 7px);
+  gap: 3px;
+}
+
+.compact span {
+  width: 7px;
+  height: 8px;
+  border-radius: 1px;
+}
+
+.compact .on {
+  box-shadow: 0 0 4px rgba(255, 196, 107, 0.6);
+}

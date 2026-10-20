@@ -12,6 +12,17 @@ import {
 import { facilitiesNear } from "../../src/domain/mapFacilities";
 import { savedArea, type SavedArea } from "../../src/domain/shortlist";
 
+test.beforeEach(async ({ page }) => {
+  // HomeMatch follows the time of day until a theme is chosen; these checks start at night.
+  await page.addInitScript(() => {
+    if (!localStorage.getItem("homematch-theme"))
+      localStorage.setItem("homematch-theme", "dark");
+    // The launch intro and the match reveal play once per session; these checks start after them.
+    sessionStorage.setItem("homematch-intro-seen", "1");
+    sessionStorage.setItem("homematch-reveal-seen", "1");
+  });
+});
+
 const preference = {
   ...structuredClone(samplePreference),
   name: "UI test profile",
@@ -472,8 +483,14 @@ test("saved profile to map, evidence, comparison, theme and persisted search his
     page.getByRole("button", { name: "Saved areas 1", exact: true }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Sign out", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "HomeMatch", exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "Preview planner", exact: true }).click();
+  await expect(
+    page.getByRole("heading", {
+      name: /Find a home that fits the way you live/,
+    }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Preview planner without an account" })
+    .click();
   await page
     .getByRole("button", { name: "Saved areas 0", exact: true })
     .click();
@@ -869,8 +886,112 @@ test("exploration outside profile preferences is retryable and never changes sco
   });
   await page.getByRole("button", { name: "Close map layers" }).click();
   await page.getByRole("button", { name: "Preferences", exact: true }).click();
-  await page.getByLabel("Add a lifestyle preference").selectOption("Gym");
-  await expect(page.getByLabel("Gym radius")).toBeVisible();
-  await page.getByLabel("Add a lifestyle preference").selectOption("Football");
-  await expect(page.getByLabel("Football radius")).toBeVisible();
+  await page
+    .getByRole("group", { name: "Gyms priority" })
+    .getByRole("button", { name: "Nice" })
+    .click();
+  await expect(
+    page.getByRole("button", { name: /^Gyms search radius/ }),
+  ).toBeVisible();
+  await page
+    .getByRole("group", { name: "Football / futsal priority" })
+    .getByRole("button", { name: "Nice" })
+    .click();
+  await expect(
+    page.getByRole("button", { name: /^Football \/ futsal search radius/ }),
+  ).toBeVisible();
+});
+
+test("matches light up once, then a weekday and a block comparison are told from the search evidence", async ({
+  page,
+}) => {
+  // Undo the shared skip so this search plays the reveal.
+  await page.addInitScript(() =>
+    sessionStorage.removeItem("homematch-reveal-seen"),
+  );
+  await page.route("**/api/**", async (route) => {
+    const url = new URL(route.request().url());
+    const path = url.pathname;
+    if (path.endsWith("/facilities"))
+      return route.fulfill({
+        json: {
+          facilities: browsingFixture(
+            url.searchParams.get("areaId")!,
+            Number(url.searchParams.get("radius")),
+          ),
+        },
+      });
+    if (path === "/api/auth/session")
+      return route.fulfill({
+        json: { user: { id: profile.id }, mode: "supabase" },
+      });
+    if (path === "/api/profiles")
+      return route.fulfill({ json: { profiles: [profile] } });
+    if (path === "/api/shortlist")
+      return route.fulfill({ json: { savedAreas: [] } });
+    if (path === "/api/discoveries")
+      return route.fulfill({
+        json:
+          route.request().method() === "POST"
+            ? { discovery }
+            : { discoveries: [] },
+      });
+    return route.abort();
+  });
+  await page.goto("/");
+  await page.getByRole("button", { name: /My profiles 1/ }).click();
+  await page.getByRole("button", { name: "Find matching areas" }).click();
+  const reveal = page.getByRole("dialog", {
+    name: "Your matches are lighting up",
+  });
+  await expect(reveal).toContainText("2 towns fit your week.");
+  await expect(
+    reveal.getByRole("img", { name: /Jurong East fits best/ }),
+  ).toBeVisible();
+  await reveal.getByRole("button", { name: "Skip" }).click();
+  await expect(reveal).toHaveCount(0);
+  expect(
+    await page.evaluate(() => sessionStorage.getItem("homematch-reveal-seen")),
+  ).toBe("1");
+  await page.getByRole("button", { name: "Replay reveal" }).click();
+  await expect(reveal).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(reveal).toHaveCount(0);
+
+  const evidence = page.getByRole("region", { name: "Area evidence" });
+  await expect(evidence).toContainText("of 10 lit");
+  await evidence
+    .getByRole("button", { name: "A weekday in Jurong East" })
+    .click();
+  const weekday = page.getByRole("region", {
+    name: "A weekday in Jurong East",
+  });
+  await expect(weekday).toContainText(
+    `30 min to ${preference.destinations[0].location!.label}`,
+  );
+  await expect(weekday).toContainText("About 5 hours of travel a week");
+  const play = weekday.getByRole("button", { name: /the day/ });
+  const playing = await play.getAttribute("aria-pressed");
+  await play.click();
+  await expect(play).not.toHaveAttribute("aria-pressed", playing!);
+  await weekday.getByRole("button", { name: /22:30/ }).click();
+  await expect(weekday.getByRole("button", { name: /22:30/ })).toHaveAttribute(
+    "aria-current",
+    "step",
+  );
+  await weekday.getByRole("button", { name: "Close weekday view" }).click();
+  await expect(weekday).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Matches (2)", exact: true }).click();
+  await page.getByLabel("Compare area").nth(0).check();
+  await page.getByLabel("Compare area").nth(1).check();
+  await page.getByRole("button", { name: "Compare (2/3)" }).click();
+  const comparison = page.getByRole("region", { name: "Area comparison" });
+  await expect(
+    comparison.getByRole("heading", { name: "Side by side, block by block." }),
+  ).toBeVisible();
+  await expect(
+    comparison.getByRole("region", { name: "Bedok block" }),
+  ).toContainText("Getting around");
+  await expect(comparison.getByRole("table")).toContainText("Overall match");
 });

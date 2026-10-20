@@ -1,10 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 36" role="img" aria-labelledby="title desc">
   <title id="title">HomeMatch logo</title>
-  <desc id="desc">An angular home, location point and check mark.</desc>
-  <g fill="#cf2839">
-    <path d="M22 36V23L36 9h24l14 14v13l-7-6V26L57 16H39L29 26v4Z"/>
-    <path d="M10 52 48 18l12 11v-7h8v14l18 16H74L48 29 22 52Z"/>
-    <path d="m28 49 7-5 13 26 13-26 7 5-20 39Z"/>
-    <path d="m37 47 7-7 5 5 10-11 6 6-16 17Z"/>
-  </g>
+  <desc id="desc">A lowercase h built from two HDB blocks, with a doorway and one lit window.</desc>
+  <path d="M5 2h7a2 2 0 0 1 2 2v9h9a6 6 0 0 1 6 6v15h-8v-8a4 4 0 0 0-8 0v8H3V4a2 2 0 0 1 2-2z" fill="#eef1ea"/>
+  <rect x="6" y="6" width="5" height="4" rx="1" fill="#9aa6bc"/>
+  <rect x="6" y="13" width="5" height="4" rx="1" fill="#9aa6bc"/>
+  <rect x="21" y="16" width="5" height="5" rx="1" fill="#ffb547"/>
 </svg>

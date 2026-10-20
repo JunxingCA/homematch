@@ -1,10 +1,11 @@
 "use client";
 import { useState } from "react";
-import { ArrowRight, Bookmark, RefreshCw, Trash2 } from "lucide-react";
+import { ArrowRight, RefreshCw, Trash2 } from "lucide-react";
 import type { SavedArea } from "@/domain/shortlist";
 import styles from "./RecommendationResults.module.css";
-const town = (name: string) =>
-  name.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+import { WindowMeter } from "./lights/WindowMeter";
+import { EmptyState, ErrorState, LoadingState } from "./states/States";
+import { litWindows, town } from "./results/resultView";
 const money = (value: number) =>
   new Intl.NumberFormat("en-SG", {
     style: "currency",
@@ -41,36 +42,38 @@ export function Shortlist({
   const validSelection = compared.map((item) => item.id);
   if (!signedIn)
     return (
-      <div className={styles.empty}>
-        <Bookmark />
-        <h2>Your saved areas</h2>
-        <p>Sign in to see your shortlist.</p>
+      <EmptyState
+        title="Your saved areas"
+        body="Sign in to see your shortlist."
+      >
         <button onClick={onSignIn}>Sign in</button>
-      </div>
+      </EmptyState>
     );
   if (!ready)
     return (
-      <div className={styles.loading} role="status">
-        <RefreshCw className={styles.spin} />
-        <h2>Loading saved areas</h2>
-      </div>
+      <LoadingState
+        title="Loading saved areas"
+        messages={["Fetching your shortlist…"]}
+      />
     );
   if (error)
     return (
-      <div className={styles.empty} role="alert">
-        <h2>Saved areas could not be loaded</h2>
-        <p>{error}</p>
+      <ErrorState title="Saved areas could not be loaded" body={error}>
         <button onClick={onReload}>
           <RefreshCw /> Retry
         </button>
-      </div>
+      </ErrorState>
     );
   return (
     <div className={styles.results}>
       <div className={styles.toolbar}>
-        <p>
-          {items.length} saved {items.length === 1 ? "area" : "areas"}
-        </p>
+        <div>
+          <h1 className="h-page">Places worth a visit.</h1>
+          <span className={`chip ${styles.savedCount}`}>
+            <span className="dot" />
+            {items.length} saved {items.length === 1 ? "area" : "areas"}
+          </span>
+        </div>
         <div className={styles.actions}>
           <button onClick={onReload} disabled={pending}>
             <RefreshCw /> Refresh shortlist
@@ -86,14 +89,14 @@ export function Shortlist({
         </div>
       </div>
       {!items.length ? (
-        <div className={styles.empty}>
-          <Bookmark />
-          <h2>No saved areas yet</h2>
-          <p>Your shortlist is empty.</p>
+        <EmptyState
+          title="No saved areas yet"
+          body="Your shortlist is empty. Save an area from your matches to keep it here."
+        >
           <button onClick={onFind}>
             Find areas <ArrowRight />
           </button>
-        </div>
+        </EmptyState>
       ) : comparison && compared.length >= 2 ? (
         <>
           <p className={styles.context} role="note">
@@ -197,10 +200,16 @@ export function Shortlist({
           </div>
         </>
       ) : (
-        <section aria-label="Saved areas">
+        <section aria-label="Saved areas" className={styles.savedGrid}>
           {items.map((item) => (
             <article className={styles.savedRow} key={item.id}>
               <div>
+                <span className={styles.savedMeter}>
+                  <WindowMeter lit={litWindows(item.result.overall)} compact />
+                  <span className="tag">
+                    {litWindows(item.result.overall)} of 10 lit
+                  </span>
+                </span>
                 <h2>{town(item.result.area.name)}</h2>
                 <p>
                   {item.context.preference.name} · searched{" "}

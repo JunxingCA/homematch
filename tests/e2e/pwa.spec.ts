@@ -1,5 +1,16 @@
 import { test, expect, type Page } from "@playwright/test";
 
+test.beforeEach(async ({ page }) => {
+  // HomeMatch follows the time of day until a theme is chosen; these checks start at night.
+  await page.addInitScript(() => {
+    if (!localStorage.getItem("homematch-theme"))
+      localStorage.setItem("homematch-theme", "dark");
+    // The launch intro and the match reveal play once per session; these checks start after them.
+    sessionStorage.setItem("homematch-intro-seen", "1");
+    sessionStorage.setItem("homematch-reveal-seen", "1");
+  });
+});
+
 async function ready(page: Page) {
   await page.goto("/");
   await expect(page.locator('[data-ready="true"]')).toBeVisible();
@@ -292,7 +303,7 @@ test("standalone launches hide installation controls", async ({ page }) => {
     page.getByRole("button", { name: "Install HomeMatch", exact: true }),
   ).toHaveCount(0);
   await expect(
-    page.getByRole("heading", { name: "Make room for your life." }),
+    page.getByRole("heading", { name: "Build your ideal block." }),
   ).toBeVisible();
 });
 

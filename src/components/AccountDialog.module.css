@@ -2,15 +2,18 @@
   width: min(480px, calc(100vw - 32px));
   max-height: calc(100dvh - 32px);
   overflow: auto;
-  padding: 24px;
-  color: var(--text);
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  box-shadow: 0 16px 60px #0005;
+  padding: 28px;
+  color: var(--ink);
+  background: var(--card);
+  border: 1.5px solid var(--edge);
+  border-radius: 24px;
+  box-shadow:
+    6px 6px 0 var(--edge),
+    0 30px 60px rgba(0, 0, 0, 0.35);
 }
 .dialog::backdrop {
-  background: #0009;
+  background: rgba(11, 18, 32, 0.72);
+  backdrop-filter: blur(3px);
 }
 .dialog header {
   display: flex;
@@ -20,12 +23,22 @@
   margin-bottom: 20px;
 }
 .dialog h2 {
-  font-size: 20px;
+  font-size: 28px;
+  letter-spacing: -0.02em;
 }
 .dialog p {
-  color: var(--muted);
-  font-size: 13px;
+  color: var(--ink-2);
+  font-size: 15px;
   margin: 12px 0;
+}
+.dialog input {
+  width: 100%;
+  border: 1.5px solid var(--edge);
+  background: var(--card-2);
+  color: var(--ink);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 16px;
 }
 .dialog label {
   margin: 20px 0 8px;
@@ -35,57 +48,74 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  min-height: 42px;
-  padding: 9px 12px;
-  border-radius: 6px;
-  border: 1px solid var(--line);
-  font-size: 13px;
+  min-height: 46px;
+  padding: 10px 20px;
+  border-radius: 999px;
+  border: 1.5px solid var(--edge);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
 }
 .icon {
-  width: 38px;
-  padding: 8px !important;
-  min-height: 38px !important;
-  color: var(--muted);
-  background: transparent;
+  width: 42px;
+  padding: 0 !important;
+  min-height: 42px !important;
+  color: var(--ink);
+  background: var(--card);
   flex-shrink: 0;
 }
+.icon:hover:not(:disabled) {
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+}
+/* Deeper than the coral accent so white text keeps AA contrast. */
 .danger {
-  background: var(--danger);
-  color: var(--bg);
-  border-color: var(--danger) !important;
+  background: #b3341e;
+  color: #fff;
+  border-color: #b3341e !important;
+}
+.danger:hover:not(:disabled) {
+  background: #962a17;
 }
 .secondary {
   background: transparent;
-  color: var(--text);
+  color: var(--ink);
 }
 .identity {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 13px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1.5px solid var(--rule);
+  background: var(--card-2);
+  font-size: 15px;
+  font-weight: 600;
   overflow-wrap: anywhere;
 }
 .identity svg {
   width: 18px;
-  color: var(--accent);
+  color: var(--ink);
   flex-shrink: 0;
 }
 .deleteSection {
-  border-top: 1px solid var(--line);
+  border-top: 1px dashed var(--rule);
   margin-top: 24px;
   padding-top: 20px;
 }
 .deleteSection h3 {
-  font-size: 15px;
+  font-size: 18px;
 }
 .dialog .note {
-  font-size: 11px;
+  font-size: 13px;
 }
 .dialog .error {
-  padding: 10px;
-  border: 1px solid var(--danger);
-  border-radius: 4px;
-  color: var(--danger);
+  padding: 10px 14px;
+  border: 1.5px solid var(--coral);
+  border-radius: 12px;
+  background: var(--pastel-pink);
+  color: var(--navy);
+  font-weight: 600;
   overflow-wrap: anywhere;
 }
 .actions {
@@ -100,6 +130,6 @@
     padding: 20px;
   }
   .dialog h2 {
-    font-size: 18px;
+    font-size: 24px;
   }
 }

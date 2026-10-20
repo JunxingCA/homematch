@@ -30,6 +30,7 @@ import {
   routeColors,
 } from "./amenityPresentation";
 import { ListingLinks } from "./ListingLinks";
+import { ErrorState, LoadingState } from "./states/States";
 import styles from "./AreaExplorer.module.css";
 const AreaMap = dynamic(() => import("./AreaMap"), {
   ssr: false,
@@ -370,8 +371,7 @@ export function AreaExplorer({
         {filterError && <p role="alert">{filterError}</p>}
       </form>
       {catalogueError ? (
-        <div className={styles.state} role="alert">
-          <p>{catalogueError}</p>
+        <ErrorState title="Areas could not be loaded" body={catalogueError}>
           <button
             onClick={() => {
               setCatalogueError("");
@@ -380,11 +380,12 @@ export function AreaExplorer({
           >
             <RefreshCw /> Retry area catalogue
           </button>
-        </div>
+        </ErrorState>
       ) : !catalogue || !selected ? (
-        <div className={styles.state} role="status">
-          Loading imported areas...
-        </div>
+        <LoadingState
+          title="Loading imported areas..."
+          messages={["Placing every town on the map…"]}
+        />
       ) : (
         <div className={styles.workspace}>
           <div className={styles.mapCanvas}>

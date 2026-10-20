@@ -1,0 +1,360 @@
+/* Fills the results workspace, above the map. */
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 960;
+  overflow: auto;
+  background: var(--bg);
+  color: var(--ink);
+  padding: 28px clamp(16px, 4vw, 48px) 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px 20px;
+  flex-wrap: wrap;
+}
+
+.headCopy {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.chips,
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.actions :global(.btn) svg {
+  width: 16px;
+  height: 16px;
+}
+
+.close {
+  flex: none;
+  width: 48px;
+  height: 48px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1.5px solid var(--edge);
+  background: var(--card);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.close:hover {
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+}
+
+.close svg {
+  width: 20px;
+  height: 20px;
+}
+
+.layout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  align-items: stretch;
+}
+
+.scene {
+  flex: 999 1 560px;
+  min-width: 0;
+  height: 560px;
+  border-radius: 28px;
+  position: relative;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1.5px var(--edge),
+    0 30px 60px var(--shadow);
+  transition: background 1.4s ease;
+}
+
+.orb {
+  position: absolute;
+  top: 70px;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--amber);
+  box-shadow: 0 0 50px rgba(255, 181, 71, 0.7);
+  transition:
+    left 1.4s ease,
+    background 1.4s ease,
+    box-shadow 1.4s ease;
+}
+
+.orb[data-night="true"] {
+  background: #f3ebd3;
+  box-shadow: 0 0 50px rgba(243, 235, 211, 0.4);
+}
+
+.caption {
+  position: absolute;
+  left: 28px;
+  top: 26px;
+  right: 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  animation: swap 0.6s ease both;
+}
+
+@keyframes swap {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+.clock {
+  font-family: var(--font-display), Arial, sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-size: clamp(60px, 8vw, 108px);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 0.9;
+}
+
+.title {
+  font-family: var(--font-display), Arial, sans-serif;
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  max-width: 520px;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.places {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 84px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 0 6%;
+}
+
+.place {
+  border-radius: 4px 4px 0 0;
+  padding: 12px 10px 14px;
+  display: grid;
+  gap: 8px;
+  transition: background 1s ease;
+}
+
+.place span {
+  width: 12px;
+  height: 14px;
+  border-radius: 2px;
+  background: rgba(20, 33, 61, 0.25);
+  transition:
+    background 1s ease,
+    box-shadow 1s ease;
+}
+
+.place span[data-state="lit"] {
+  background: var(--amber-glow);
+  box-shadow: 0 0 10px rgba(255, 196, 107, 0.6);
+}
+
+.place span[data-state="mine"] {
+  background: var(--coral);
+  box-shadow: 0 0 10px rgba(229, 85, 59, 0.6);
+}
+
+.road {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 84px;
+  background: var(--navy);
+}
+
+.labels {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 28px;
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 0 4%;
+}
+
+.labels span {
+  max-width: 24%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 700;
+  color: #eef1ea;
+  background: #3a4a6b;
+  border-radius: 8px;
+  padding: 4px 9px;
+}
+
+.labels span[data-here="true"] {
+  background: var(--coral);
+  color: #fff;
+}
+
+.walker {
+  position: absolute;
+  bottom: 64px;
+  width: 18px;
+  height: 18px;
+  margin-left: -9px;
+  border-radius: 50%;
+  background: var(--coral);
+  box-shadow:
+    0 0 0 5px rgba(229, 85, 59, 0.3),
+    0 0 16px rgba(229, 85, 59, 0.8);
+  transition: left 1.6s cubic-bezier(0.5, 0, 0.3, 1);
+}
+
+.timeline {
+  flex: 1 1 340px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--card);
+  border: 1.5px solid var(--edge);
+  border-radius: 24px;
+  padding: 18px;
+}
+
+.timeline ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.progress {
+  height: 8px;
+  background: var(--track);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress span {
+  display: block;
+  height: 100%;
+  background: var(--amber);
+  transition: width 0.4s ease;
+}
+
+/* Scoped above the shared results button style. */
+.timeline .moment {
+  display: flex;
+  justify-content: flex-start;
+  min-height: 0;
+  font-weight: 600;
+  gap: 14px;
+  align-items: center;
+  width: 100%;
+  text-align: left;
+  color: var(--ink);
+  background: transparent;
+  border: 1.5px solid transparent;
+  border-radius: 16px;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+
+.timeline .moment:hover:not(:disabled) {
+  background: var(--card-2);
+  color: var(--ink);
+  border-color: var(--rule);
+}
+
+.timeline .moment[aria-current="step"] {
+  background: var(--amber-pale);
+  color: var(--navy);
+  border-color: var(--navy);
+}
+
+.momentIcon {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: inline-grid;
+  place-items: center;
+  color: var(--navy);
+}
+
+.momentIcon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.momentText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.momentText b {
+  font-family: var(--font-display), Arial, sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  margin-right: 6px;
+}
+
+.momentText small {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.small {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--ink-2);
+  line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+  .overlay {
+    padding: 18px 14px 28px;
+  }
+  .scene {
+    height: 460px;
+  }
+  .caption {
+    left: 18px;
+    right: 18px;
+  }
+  .title {
+    font-size: 22px;
+  }
+  .orb {
+    top: auto;
+    bottom: 200px;
+  }
+}

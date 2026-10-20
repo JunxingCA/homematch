@@ -1,0 +1,22 @@
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink);
+}
+
+.logo[data-tone="light"] {
+  color: #eef1ea;
+}
+
+.mark {
+  flex: none;
+}
+
+.word {
+  font-family: var(--font-display), Arial, sans-serif;
+  font-weight: 800;
+  font-size: 26px;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}

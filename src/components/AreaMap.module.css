@@ -20,11 +20,11 @@
   width: 40px;
   height: 40px;
   padding: 8px;
-  box-shadow: 0 2px 10px #0002;
-  background: var(--panel);
-  color: var(--text);
-  border: 1px solid var(--line);
-  border-radius: 6px;
+  box-shadow: 0 6px 18px var(--shadow);
+  background: var(--card);
+  color: var(--ink);
+  border: 1.5px solid var(--edge);
+  border-radius: 50%;
   display: grid;
   place-items: center;
 }
@@ -42,10 +42,10 @@
   align-items: center;
   justify-content: center;
   min-height: 36px;
-  border: 1px solid #448ea5;
-  background: #173d48;
-  color: #edfbff;
-  border-radius: 6px;
+  border: 1.5px solid var(--amber);
+  background: var(--navy);
+  color: #eef1ea;
+  border-radius: 10px;
   font:
     700 13px Arial,
     sans-serif;
@@ -62,14 +62,17 @@
   height: 10px;
   background: inherit;
   transform: rotate(45deg);
-  border-bottom: 1px solid #448ea5;
-  border-right: 1px solid #448ea5;
+  border-bottom: 1.5px solid var(--amber);
+  border-right: 1.5px solid var(--amber);
 }
-.pin small {
-  color: #96cbd6;
-  font-size: 10px;
-  border-right: 1px solid #448ea5;
-  padding-right: 7px;
+/* A lit window instead of a rank number. */
+.window {
+  flex: none;
+  width: 9px;
+  height: 11px;
+  border-radius: 2px;
+  background: var(--amber-glow);
+  box-shadow: 0 0 6px rgba(255, 196, 107, 0.8);
 }
 .areaPin {
   width: 140px;
@@ -96,16 +99,16 @@
   }
 }
 .selected {
-  color: #0e3028;
-  background: #8ce6c1;
-  border-color: #367c67;
+  color: var(--navy);
+  background: var(--amber);
+  border-color: var(--navy);
 }
-.selected small {
-  color: #215a49;
-  border-color: #367c67;
+.selected .window {
+  background: var(--coral);
+  box-shadow: 0 0 6px rgba(229, 85, 59, 0.8);
 }
 .selected::after {
-  border-color: #367c67;
+  border-color: var(--navy);
 }
 .pinRoot:focus-visible .pin {
   outline: 3px solid var(--text);
@@ -122,10 +125,11 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  font-size: 12px;
+  background: var(--card);
+  border: 1.5px solid var(--edge);
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 600;
 }
 .map :global(.leaflet-control-attribution) {
   background: var(--panel);
