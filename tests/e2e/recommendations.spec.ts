@@ -588,7 +588,10 @@ test("map workspace filters, layers, keyboard pins and view state", async ({
   ).toBeVisible();
   const originalMap = await map.elementHandle();
   const mapBox = await map.boundingBox();
-  expect(mapBox!.height).toBeGreaterThan(500);
+  // The mobile header wraps; keep at least half the viewport usable as a map.
+  expect(mapBox!.height).toBeGreaterThan(
+    info.project.name === "mobile" ? page.viewportSize()!.height / 2 : 500,
+  );
   expect(mapBox!.width).toBe(info.project.name === "mobile" ? 360 : 1440);
   expect(mapBox!.y + mapBox!.height).toBeLessThanOrEqual(
     info.project.name === "mobile" ? 801 : 1001,
