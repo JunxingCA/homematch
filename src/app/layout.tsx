@@ -22,9 +22,20 @@ export const metadata: Metadata = {
   applicationName: "HomeMatch",
   appleWebApp: { capable: true, title: "HomeMatch", statusBarStyle: "default" },
   icons: {
-    icon: [{ url: "/pwa/favicon-32.png", sizes: "32x32", type: "image/png" }],
+    icon: [
+      {
+        url: "/pwa/favicon-32.png?v=lights-20261021",
+        sizes: "32x32",
+        type: "image/png",
+      },
+    ],
+    shortcut: "/favicon.ico?v=lights-20261021",
     apple: [
-      { url: "/pwa/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+      {
+        url: "/pwa/apple-touch-icon.png?v=lights-20261021",
+        sizes: "180x180",
+        type: "image/png",
+      },
     ],
   },
 };

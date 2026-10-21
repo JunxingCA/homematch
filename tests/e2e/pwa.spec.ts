@@ -64,8 +64,15 @@ test("manifest, icon dimensions, secure worker headers and control", async ({
   );
   await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveAttribute(
     "href",
-    "/pwa/apple-touch-icon.png",
+    "/pwa/apple-touch-icon.png?v=lights-20261021",
   );
+  await expect(page.locator('link[rel="icon"]')).toHaveAttribute(
+    "href",
+    "/pwa/favicon-32.png?v=lights-20261021",
+  );
+  const ico = await request.get("/favicon.ico?v=lights-20261021");
+  expect(ico.ok()).toBe(true);
+  expect((await ico.body()).readUInt16LE(2)).toBe(1);
   expect(await cacheUrls(page)).toEqual(allowed);
 });
 

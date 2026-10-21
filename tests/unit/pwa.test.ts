@@ -87,6 +87,24 @@ function worker() {
 }
 
 describe("public-only PWA", () => {
+  it("versions new-logo URLs without changing the installed application identity", async () => {
+    for (const icon of manifest().icons ?? [])
+      expect(icon.src).toContain("?v=lights-20261021");
+    const ico = await readFile(
+      new URL("../../public/favicon.ico", import.meta.url),
+    );
+    expect(ico.readUInt16LE(0)).toBe(0);
+    expect(ico.readUInt16LE(2)).toBe(1);
+    expect(ico.readUInt16LE(4)).toBe(1);
+    expect(ico[6]).toBe(32);
+    expect(ico[7]).toBe(32);
+    const png = await readFile(
+      new URL("../../public/pwa/favicon-32.png", import.meta.url),
+    );
+    expect(ico.readUInt32LE(14)).toBe(png.length);
+    expect(ico.readUInt32LE(18)).toBe(22);
+    expect(ico.subarray(22)).toEqual(png);
+  });
   it("uses a stable, token-free home entry and standalone scope", () => {
     expect(manifest()).toMatchObject({
       id: "/",

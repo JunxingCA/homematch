@@ -1,5 +1,5 @@
 import { createRequire } from "node:module";
-import { mkdir, readFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 
 // Use Next's existing image dependency; the source is the "Lights On" night logo.
 const require = createRequire(import.meta.resolve("next/package.json"));
@@ -32,4 +32,18 @@ for (const [name, size, ratio] of [
     .png()
     .toFile(new URL(name, directory).pathname);
 }
-console.log("Generated five HomeMatch icons from the existing logo.");
+// A PNG-backed ICO also covers browsers requesting the conventional root URL.
+const png = await readFile(new URL("favicon-32.png", directory));
+const ico = Buffer.alloc(22);
+ico.writeUInt16LE(1, 2);
+ico.writeUInt16LE(1, 4);
+ico[6] = 32;
+ico[7] = 32;
+ico.writeUInt16LE(1, 10);
+ico.writeUInt16LE(32, 12);
+ico.writeUInt32LE(png.length, 14);
+ico.writeUInt32LE(22, 18);
+await writeFile(new URL("public/favicon.ico", root), Buffer.concat([ico, png]));
+console.log(
+  "Generated five PNG icons and a root favicon.ico from the existing logo.",
+);
