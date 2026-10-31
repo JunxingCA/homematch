@@ -9,8 +9,9 @@ import {
   TileLayer,
   Tooltip,
   useMap,
+  useMapEvents,
 } from "react-leaflet";
-import { divIcon } from "leaflet";
+import { divIcon, type TileLayer as LeafletTileLayer } from "leaflet";
 import { LocateFixed, Maximize, Minus, Plus, RefreshCw } from "lucide-react";
 import type { Area, RouteEvidence } from "@/domain/recommendations";
 import type { Preference } from "@/domain/preferences";
@@ -52,8 +53,7 @@ function View({
   wideMarkers: boolean;
 }) {
   const map = useMap();
-  const previous = useRef(selected);
-  const fittedAreas = useRef("");
+  const previous = useRef({ selected: "", areas: "" });
   const fit = useCallback(() => {
     const size = map.getSize();
     map.fitBounds(
@@ -77,15 +77,6 @@ function View({
     observer.observe(map.getContainer());
     return () => observer.disconnect();
   }, [map]);
-  useEffect(() => {
-    const key = discovery.results
-      .map((r) => `${r.area.id}:${r.area.latitude}:${r.area.longitude}`)
-      .join("|");
-    if (key && key !== fittedAreas.current) {
-      fittedAreas.current = key;
-      fit();
-    }
-  }, [discovery, fit]);
   const centre = useCallback(() => {
     const area = discovery.results.find((r) => r.area.id === selected)?.area;
     if (!area) return;
@@ -96,10 +87,16 @@ function View({
     map.setView(map.unproject(point, zoom), zoom, { animate: false });
   }, [discovery, map, selected]);
   useEffect(() => {
-    if (previous.current === selected) return;
-    previous.current = selected;
-    centre();
-  }, [selected, centre]);
+    const areas = discovery.results
+      .map((r) => `${r.area.id}:${r.area.latitude}:${r.area.longitude}`)
+      .join("|");
+    if (!areas) return;
+    if (previous.current.areas !== areas) {
+      if (wideMarkers) fit();
+      else centre();
+    } else if (previous.current.selected !== selected) centre();
+    previous.current = { selected, areas };
+  }, [selected, discovery, wideMarkers, centre, fit]);
   return (
     <div className={styles.navigation} data-exploring={wideMarkers}>
       <button title="Zoom in" aria-label="Zoom in" onClick={() => map.zoomIn()}>
@@ -134,6 +131,63 @@ function View({
   );
 }
 
+type TileStatus = "partial" | "unavailable" | null;
+function Basemap({
+  theme,
+  onStatus,
+}: {
+  theme: "light" | "dark";
+  onStatus: (status: TileStatus) => void;
+}) {
+  const map = useMap();
+  const layer = useRef<LeafletTileLayer>(null);
+  const checkTiles = useCallback(() => {
+    const bounds = map.getContainer().getBoundingClientRect();
+    if (!bounds.width || !bounds.height) return;
+    const images = Array.from(
+      layer.current?.getContainer()?.querySelectorAll("img") ?? [],
+    ).filter((image) => {
+      const rect = image.getBoundingClientRect();
+      return (
+        rect.right > bounds.left &&
+        rect.left < bounds.right &&
+        rect.bottom > bounds.top &&
+        rect.top < bounds.bottom
+      );
+    });
+    // Only current, settled viewport tiles count; an old failure must not poison the layer.
+    const failed = images.filter(
+      (image) => image.complete && !image.naturalWidth,
+    ).length;
+    const loaded = images.some(
+      (image) => image.complete && image.naturalWidth > 0,
+    );
+    onStatus(failed ? (loaded ? "partial" : "unavailable") : null);
+  }, [map, onStatus]);
+  useMapEvents({ moveend: checkTiles, resize: checkTiles });
+  return (
+    <>
+      <TileLayer
+        ref={layer}
+        bounds={[
+          [1.144, 103.535],
+          [1.494, 104.502],
+        ]}
+        noWrap
+        url={`https://www.onemap.gov.sg/maps/tiles/${theme === "dark" ? "Night" : "GreyLite"}/{z}/{x}/{y}.png`}
+        attribution={
+          '<a href="https://www.onemap.gov.sg/" target="_blank" rel="noopener noreferrer">OneMap</a> &copy; contributors | <a href="https://www.sla.gov.sg/" target="_blank" rel="noopener noreferrer">Singapore Land Authority</a>'
+        }
+        eventHandlers={{
+          loading: () => onStatus(null),
+          tileerror: checkTiles,
+          load: checkTiles,
+        }}
+      />
+    </>
+  );
+}
+
 export default function AreaMap({
   discovery,
   selected,
@@ -159,9 +213,8 @@ export default function AreaMap({
   browsing: MapFacilities | null;
   browseRadius: number;
 }) {
-  const [tileError, setTileError] = useState(false);
   const [tileRevision, setTileRevision] = useState(0);
-  const failedLayers = useRef(new WeakSet<object>());
+  const [tileStatus, setTileStatus] = useState<TileStatus>(null);
   const result = discovery.results.find((r) => r.area.id === selected);
   return (
     <div
@@ -171,15 +224,17 @@ export default function AreaMap({
         markerMode === "area" ? "Area exploration map" : "Recommended areas map"
       }
     >
-      {tileError && (
+      {tileStatus && (
         <div role="status" className={styles.tileError}>
           <span>
-            OneMap tiles unavailable. Area evidence is still accessible.
+            {tileStatus === "partial"
+              ? "Some OneMap tiles could not load. Area evidence is still accessible."
+              : "OneMap tiles unavailable. Area evidence is still accessible."}
           </span>
           <button
             onClick={() => {
+              setTileStatus(null);
               setTileRevision((n) => n + 1);
-              setTileError(false);
             }}
           >
             <RefreshCw /> Retry map
@@ -194,41 +249,10 @@ export default function AreaMap({
         zoomControl={false}
         className={styles.map}
       >
-        <TileLayer
+        <Basemap
           key={`${theme}:${tileRevision}`}
-          bounds={[
-            [1.144, 103.535],
-            [1.494, 104.502],
-          ]}
-          noWrap
-          url={`https://www.onemap.gov.sg/maps/tiles/${theme === "dark" ? "Night" : "GreyLite"}/{z}/{x}/{y}.png`}
-          attribution={
-            '<a href="https://www.onemap.gov.sg/" target="_blank" rel="noopener noreferrer">OneMap</a> &copy; contributors | <a href="https://www.sla.gov.sg/" target="_blank" rel="noopener noreferrer">Singapore Land Authority</a>'
-          }
-          eventHandlers={{
-            tileerror: (event) => {
-              failedLayers.current.add(event.target);
-              setTileError(true);
-            },
-            load: (event) => {
-              const images = event.target
-                .getContainer()
-                ?.querySelectorAll("img") as
-                NodeListOf<HTMLImageElement> | undefined;
-              setTileError(
-                failedLayers.current.has(event.target) ||
-                  !images ||
-                  !Array.from(images).some(
-                    (img) =>
-                      img.src.includes(
-                        `/tiles/${theme === "dark" ? "Night" : "GreyLite"}/`,
-                      ) &&
-                      img.complete &&
-                      img.naturalWidth > 0,
-                  ),
-              );
-            },
-          }}
+          theme={theme}
+          onStatus={setTileStatus}
         />
         <View
           discovery={discovery}

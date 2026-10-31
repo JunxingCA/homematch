@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { readFile } from "node:fs/promises";
 import { samplePreference } from "../../src/domain/fixtures";
 import {
   scoreArea,
@@ -542,6 +543,94 @@ test("shortlist read failure is not shown as an empty shortlist and can be retri
   ).toBeVisible();
 });
 
+test("map focuses the first match and tile warnings recover after navigating to healthy tiles", async ({
+  page,
+}) => {
+  const tile = await readFile("public/pwa/favicon-32.png");
+  let failures: "all" | "one" | "none" = "all";
+  await page.route("**/maps/tiles/**", async (route) => {
+    if (failures === "all") return route.abort();
+    if (failures === "one") {
+      failures = "none";
+      return route.abort();
+    }
+    return route.fulfill({ contentType: "image/png", body: tile });
+  });
+  await page.route("**/api/**", (route) => {
+    const path = new URL(route.request().url()).pathname;
+    if (path.endsWith("/facilities"))
+      return route.fulfill({
+        json: { facilities: browsingFixture("jurong-east", 1000) },
+      });
+    if (path === "/api/auth/session")
+      return route.fulfill({
+        json: { user: { id: profile.id }, mode: "supabase" },
+      });
+    if (path === "/api/profiles")
+      return route.fulfill({ json: { profiles: [profile] } });
+    if (path === "/api/shortlist")
+      return route.fulfill({ json: { savedAreas: [] } });
+    if (path === "/api/discoveries")
+      return route.fulfill({
+        json:
+          route.request().method() === "POST"
+            ? { discovery }
+            : { discoveries: [] },
+      });
+    return route.abort();
+  });
+  await page.goto("/");
+  await page.getByRole("button", { name: /My profiles 1/ }).click();
+  await page.getByRole("button", { name: "Find matching areas" }).click();
+  await expect(
+    page.getByText(
+      "OneMap tiles unavailable. Area evidence is still accessible.",
+    ),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("region", { name: "Area evidence" }),
+  ).toContainText("Jurong East MRT");
+  failures = "none";
+  await page.getByRole("button", { name: "Retry map", exact: true }).click();
+  await expect(
+    page.locator('.leaflet-tile-loaded[src*="/Night/15/"]').first(),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Retry map", exact: true }),
+  ).toHaveCount(0);
+  failures = "one";
+  await page.getByRole("button", { name: "Zoom in", exact: true }).click();
+  await expect(
+    page.getByText(
+      "Some OneMap tiles could not load. Area evidence is still accessible.",
+    ),
+  ).toBeVisible();
+  // A fresh viewport clears the earlier failure without remounting/retrying the layer.
+  await expect(page.locator(".leaflet-zoom-anim")).toHaveCount(0);
+  await page.getByRole("button", { name: "Zoom in", exact: true }).click();
+  await expect(
+    page.locator('.leaflet-tile-loaded[src*="/Night/17/"]').first(),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Retry map", exact: true }),
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: "Collapse panels", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Show all matching areas", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: /BEDOK: match score/ }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: /BEDOK: match score/ }).focus();
+  await page.keyboard.press("Enter");
+  await expect(
+    page.getByRole("region", { name: "Area evidence" }),
+  ).toContainText("Bedok MRT");
+  await expect(
+    page.locator('.leaflet-tile-loaded[src*="/Night/15/"]').first(),
+  ).toBeVisible();
+});
+
 test("map workspace filters, layers, keyboard pins and view state", async ({
   page,
 }, info) => {
@@ -707,7 +796,7 @@ test("map workspace filters, layers, keyboard pins and view state", async ({
   await page.getByRole("button", { name: "Zoom in", exact: true }).click();
   await expect(
     page.getByText(
-      "OneMap tiles unavailable. Area evidence is still accessible.",
+      /(?:OneMap tiles unavailable|Some OneMap tiles could not load)\. Area evidence is still accessible\./,
     ),
   ).toBeVisible();
   await expect(
@@ -720,7 +809,7 @@ test("map workspace filters, layers, keyboard pins and view state", async ({
   ).toBeVisible();
   await expect(
     page.getByText(
-      "OneMap tiles unavailable. Area evidence is still accessible.",
+      /(?:OneMap tiles unavailable|Some OneMap tiles could not load)\. Area evidence is still accessible\./,
     ),
   ).toHaveCount(0);
   await bedok.focus();
