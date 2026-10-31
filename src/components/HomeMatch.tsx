@@ -66,6 +66,7 @@ function initialPreference(preview: boolean, locationMode: string): Preference {
 type ApiError = {
   code: string;
   message: string;
+  retryAfter?: number;
   fields?: { path: string; message: string }[];
 };
 class RequestError extends Error {
@@ -133,6 +134,8 @@ export function HomeMatch({
   );
   const [authMessage, setAuthMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  const searchActive = useRef(false);
+  const [searchRetryAt, setSearchRetryAt] = useState(0);
   const [error, setError] = useState("");
   const [fields, setFields] = useState<{ path: string; message: string }[]>([]);
   const [candidates, setCandidates] = useState<Record<number, Location[]>>({});
@@ -537,6 +540,7 @@ export function HomeMatch({
     setSearchError(problems);
   }
   async function findAreas(profile: Profile, filters?: MarketFilters) {
+    if (busy || searchActive.current || Date.now() < searchRetryAt) return;
     if (
       dirty &&
       !window.confirm("Use the saved profile and discard unsaved changes?")
@@ -553,6 +557,8 @@ export function HomeMatch({
       return;
     }
     navigate("results");
+    searchActive.current = true;
+    setSearchRetryAt(0);
     setBusy(true);
     try {
       const result = await api<{ discovery: Discovery }>(
@@ -580,8 +586,26 @@ export function HomeMatch({
         ].slice(0, 10),
       );
     } catch (e) {
-      if (generation === discoveryGeneration.current) fail(e);
+      if (generation === discoveryGeneration.current) {
+        if (
+          e instanceof RequestError &&
+          ["DISCOVERY_BUSY", "ONEMAP_RATE_LIMIT"].includes(e.detail.code)
+        ) {
+          const seconds = e.detail.retryAfter;
+          setSearchRetryAt(
+            Date.now() +
+              (typeof seconds === "number" && Number.isFinite(seconds)
+                ? Math.max(1, Math.min(3600, seconds))
+                : e.detail.code === "ONEMAP_RATE_LIMIT"
+                  ? 60
+                  : 15) *
+                1000,
+          );
+        }
+        fail(e);
+      }
     } finally {
+      searchActive.current = false;
       if (generation === discoveryGeneration.current) setBusy(false);
     }
   }
@@ -1186,6 +1210,7 @@ export function HomeMatch({
                 discovery={discovery}
                 theme={theme === "light" ? "light" : "dark"}
                 loading={busy}
+                retryAt={searchRetryAt}
                 onBack={() =>
                   navigate(fromShortlist ? "shortlist" : "profiles")
                 }

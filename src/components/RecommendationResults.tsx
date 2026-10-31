@@ -60,6 +60,7 @@ const score = (n: number | null) =>
 export function RecommendationResults({
   discovery,
   loading,
+  retryAt = 0,
   onBack,
   onRetry,
   savedAreas,
@@ -72,6 +73,7 @@ export function RecommendationResults({
 }: {
   discovery: Discovery | null;
   loading: boolean;
+  retryAt?: number;
   onBack: () => void;
   onRetry: () => void;
   savedAreas: SavedArea[];
@@ -82,6 +84,16 @@ export function RecommendationResults({
   backLabel?: string;
   theme: "light" | "dark";
 }) {
+  const [retrySeconds, setRetrySeconds] = useState(() =>
+    Math.max(0, Math.ceil((retryAt - Date.now()) / 1000)),
+  );
+  useEffect(() => {
+    if (retryAt <= Date.now()) return;
+    const update = () =>
+      setRetrySeconds(Math.max(0, Math.ceil((retryAt - Date.now()) / 1000)));
+    const timer = window.setInterval(update, 250);
+    return () => window.clearInterval(timer);
+  }, [retryAt]);
   const [selection, setSelection] = useState<string | null>(
     initialArea ?? null,
   );
@@ -155,11 +167,16 @@ export function RecommendationResults({
   if (!discovery)
     return (
       <EmptyState
-        title="Your search is ready to retry"
+        title={
+          retrySeconds
+            ? "Please wait before retrying"
+            : "Your search is ready to retry"
+        }
         body="Your saved preferences are unchanged."
       >
-        <button onClick={onRetry}>
-          <RefreshCw /> Retry search
+        <button onClick={onRetry} disabled={retrySeconds > 0}>
+          <RefreshCw />{" "}
+          {retrySeconds ? `Retry in ${retrySeconds}s` : "Retry search"}
         </button>
         <button onClick={onBack}>
           <ArrowLeft /> {backLabel}

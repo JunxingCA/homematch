@@ -97,6 +97,20 @@ beforeEach(() => {
 });
 const run = () =>
   new RecommendationController().create({ profileId, revision: 2 });
+it("reports the remaining cooldown rather than restarting a fixed 15-second wait", async () => {
+  const now = Date.now();
+  const clock = vi.spyOn(Date, "now").mockReturnValue(now);
+  try {
+    await run();
+    clock.mockReturnValue(now + 10000);
+    await expect(run()).rejects.toMatchObject({
+      code: "DISCOVERY_BUSY",
+      retryAfter: 5,
+    });
+  } finally {
+    clock.mockRestore();
+  }
+});
 it("lists only the authenticated caller's visible history through RLS", async () => {
   mocks.rpc.mockResolvedValue({
     data: [{ id: profileId, created_at: "2026-10-14", profile_name: "Home" }],

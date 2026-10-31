@@ -23,6 +23,20 @@ const auth = (token = "RENEWED", expiry = time + 3 * 86400000) =>
   });
 
 describe("server-only OneMap renewal", () => {
+  it("does not send more provider requests during a reported quota cooldown", async () => {
+    const f = fixture({ ONEMAP_TOKEN: "MANUAL" });
+    f.fetcher.mockResolvedValueOnce(
+      new Response("", { status: 429, headers: { "retry-after": "60" } }),
+    );
+    await expect(f.client.json(url)).rejects.toMatchObject({ retryAfter: 60 });
+    f.now.mockReturnValue(time + 10000);
+    await expect(f.client.json(url)).rejects.toMatchObject({ retryAfter: 50 });
+    expect(f.fetcher).toHaveBeenCalledOnce();
+    f.now.mockReturnValue(time + 60000);
+    f.fetcher.mockResolvedValueOnce(Response.json({ results: [] }));
+    expect(await f.client.json(url)).toEqual({ results: [] });
+    expect(f.fetcher).toHaveBeenCalledTimes(2);
+  });
   it.each(["23", "9000", "not-a-date"])(
     "bounds quota retry information (%s) without retries or token renewal",
     async (value) => {

@@ -543,6 +543,64 @@ test("shortlist read failure is not shown as an empty shortlist and can be retri
   ).toBeVisible();
 });
 
+for (const code of ["DISCOVERY_BUSY", "ONEMAP_RATE_LIMIT"]) {
+  test(`${code} disables retry until the server delay ends without automatic resubmission`, async ({
+    page,
+  }) => {
+    let attempts = 0;
+    await page.route("**/api/**", (route) => {
+      const path = new URL(route.request().url()).pathname;
+      if (path === "/api/auth/session")
+        return route.fulfill({
+          json: { user: { id: profile.id }, mode: "supabase" },
+        });
+      if (path === "/api/profiles")
+        return route.fulfill({ json: { profiles: [profile] } });
+      if (path === "/api/shortlist")
+        return route.fulfill({ json: { savedAreas: [] } });
+      if (path === "/api/discoveries") {
+        if (route.request().method() !== "POST")
+          return route.fulfill({ json: { discoveries: [] } });
+        attempts++;
+        if (attempts === 1)
+          return route.fulfill({
+            status: code === "DISCOVERY_BUSY" ? 429 : 503,
+            json: {
+              error: {
+                code,
+                message: "Please wait before retrying.",
+                retryAfter: 3,
+              },
+            },
+          });
+        return route.fulfill({ json: { discovery } });
+      }
+      return route.abort();
+    });
+    await page.goto("/");
+    await page.getByRole("button", { name: /My profiles 1/ }).click();
+    await page.getByRole("button", { name: "Find matching areas" }).click();
+    await expect(
+      page.getByRole("heading", { name: "Please wait before retrying" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /Retry in \d+s/ }),
+    ).toBeDisabled();
+    expect(attempts).toBe(1);
+    const retry = page.getByRole("button", {
+      name: "Retry search",
+      exact: true,
+    });
+    await expect(retry).toBeEnabled({ timeout: 6000 });
+    expect(attempts).toBe(1);
+    await retry.click();
+    await expect(
+      page.getByRole("heading", { name: "Your area matches" }),
+    ).toBeVisible();
+    expect(attempts).toBe(2);
+  });
+}
+
 test("map focuses the first match and tile warnings recover after navigating to healthy tiles", async ({
   page,
 }) => {
@@ -614,7 +672,9 @@ test("map focuses the first match and tile warnings recover after navigating to 
   await expect(
     page.getByRole("button", { name: "Retry map", exact: true }),
   ).toHaveCount(0);
-  await page.getByRole("button", { name: "Collapse panels", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Collapse panels", exact: true })
+    .click();
   await page
     .getByRole("button", { name: "Show all matching areas", exact: true })
     .click();

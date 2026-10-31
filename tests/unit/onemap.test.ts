@@ -12,8 +12,10 @@ vi.mock("@/server/config", () => ({
 vi.mock("@/server/supabase", () => ({
   adminClient: () => ({ from: () => ({ upsert: mocks.upsert }) }),
 }));
-import { OneMapAdapter } from "@/server/adapters/OneMapAdapter";
-beforeEach(() => {
+let OneMapAdapter: typeof import("@/server/adapters/OneMapAdapter").OneMapAdapter;
+beforeEach(async () => {
+  vi.resetModules();
+  ({ OneMapAdapter } = await import("@/server/adapters/OneMapAdapter"));
   vi.resetAllMocks();
   mocks.token = "test-only-token";
   mocks.upsert.mockImplementation((rows) => {

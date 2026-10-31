@@ -4,9 +4,12 @@ vi.mock("server-only", () => ({}));
 vi.mock("@/server/config", () => ({
   config: () => ({ ONEMAP_TOKEN: "test" }),
 }));
-import { OneMapRoutingAdapter } from "@/server/adapters/OneMapRoutingAdapter";
+let OneMapRoutingAdapter: typeof import("@/server/adapters/OneMapRoutingAdapter").OneMapRoutingAdapter;
 import { samplePreference } from "@/domain/fixtures";
-beforeEach(() => {
+beforeEach(async () => {
+  vi.resetModules();
+  ({ OneMapRoutingAdapter } =
+    await import("@/server/adapters/OneMapRoutingAdapter"));
   vi.stubGlobal("fetch", mock.fetch);
   mock.fetch.mockReset();
 });

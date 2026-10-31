@@ -41,16 +41,24 @@ export class RecommendationController {
         "Area ranking currently supports Resale HDB. BTO and private housing need separate price evidence.",
         422,
       );
-    if (
-      running.has(user.id) ||
-      Date.now() - (lastRequest.get(user.id) ?? 0) < 15000
-    )
+    if (running.has(user.id))
       throw new AppError(
         "DISCOVERY_BUSY",
-        "Please wait for your current search, or retry in 15 seconds.",
+        "Your previous search is still running. Check recent searches after it finishes, or wait before trying again.",
         429,
         true,
         15,
+      );
+    const cooldown = Math.ceil(
+      (15000 - (Date.now() - (lastRequest.get(user.id) ?? 0))) / 1000,
+    );
+    if (cooldown > 0)
+      throw new AppError(
+        "DISCOVERY_BUSY",
+        `Please wait ${cooldown} seconds before starting another search.`,
+        429,
+        true,
+        cooldown,
       );
     let release: (() => Promise<void>) | undefined;
     if (lastRequest.size > 1000) lastRequest.clear();

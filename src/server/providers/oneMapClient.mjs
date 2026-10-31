@@ -99,6 +99,7 @@ export function createOneMapClient({
     expiry = 0,
     pending,
     cooldown = 0,
+    rateLimitedUntil = 0,
     previous;
   function settings() {
     const env = getEnv();
@@ -182,13 +183,22 @@ export function createOneMapClient({
     let current = await getToken();
     for (let attempt = 0; attempt < 2; attempt++) {
       deadline.throwIfAborted();
+      if (rateLimitedUntil > now())
+        throw new OneMapError(Math.ceil((rateLimitedUntil - now()) / 1000));
       const response = await fetcher(url, {
         headers: { Authorization: current },
         cache: "no-store",
         redirect: "error",
         signal: deadline,
       });
-      if (response.status === 429) throw quotaError(response, now());
+      if (response.status === 429) {
+        const error = quotaError(response, now());
+        rateLimitedUntil = Math.max(
+          rateLimitedUntil,
+          now() + error.retryAfter * 1000,
+        );
+        throw error;
+      }
       let body;
       try {
         body = await readJson(
