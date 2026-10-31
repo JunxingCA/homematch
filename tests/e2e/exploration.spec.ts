@@ -186,7 +186,7 @@ async function fixture(
   await page.goto("/");
   await page.getByRole("button", { name: /My profiles 1/ }).click();
   await page
-    .getByRole("button", { name: "Explore areas", exact: true })
+    .getByRole("button", { name: "Explore without ranking", exact: true })
     .click();
   await expect(
     page.getByRole("heading", { name: "Explore areas", exact: true }),
@@ -381,6 +381,46 @@ test("private ranking submits category-specific size filters and handles an unco
   ).toBeVisible();
 });
 for (const category of ["BTO", "Condominium", "Private / landed"] as const) {
+  test(`${category}: primary profile action ranks directly with default market filters`, async ({
+    page,
+  }) => {
+    const { profile } = await fixture(page, category);
+    let requests = 0;
+    await page.route("**/api/market-rankings", async (route) => {
+      requests++;
+      expect(route.request().postDataJSON()).toMatchObject({
+        profileId: profile.id,
+        revision: profile.revision,
+        filters: {
+          includeClosedLaunches: false,
+          minAreaSqm: 0,
+          maxAreaSqm: 20000,
+          areaType: "Any",
+          saleType: "Any",
+        },
+      });
+      await route.fulfill({
+        status: 503,
+        json: {
+          error: {
+            code: "RESEARCH_UNAVAILABLE",
+            message: "Source temporarily unavailable.",
+          },
+        },
+      });
+    });
+    await page.getByRole("button", { name: /My profiles 1/ }).click();
+    await page
+      .getByRole("button", { name: "Find matching areas", exact: true })
+      .click();
+    await expect.poll(() => requests).toBe(1);
+    await expect(
+      page.getByRole("button", { name: "Retry search", exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Explore areas", exact: true }),
+    ).toHaveCount(0);
+  });
   test(`${category}: unscored map, optional journeys, independent layers and external navigation`, async ({
     page,
     context,

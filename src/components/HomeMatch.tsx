@@ -35,7 +35,10 @@ import { ThemeSwitch, type ThemeChoice } from "./lights/ThemeSwitch";
 import { applyPreset, type LifestylePresetId } from "./lights/presets";
 import { RecommendationResults } from "./RecommendationResults";
 import { AreaExplorer } from "./AreaExplorer";
-import type { MarketFilters } from "@/domain/marketEvidence.mjs";
+import {
+  marketFiltersSchema,
+  type MarketFilters,
+} from "@/domain/marketEvidence.mjs";
 import { PwaInstallButton } from "./PwaSupport";
 import type { Discovery } from "@/domain/recommendations";
 import type { SavedArea } from "@/domain/shortlist";
@@ -550,12 +553,12 @@ export function HomeMatch({
     setInitialArea(undefined);
     setFromShortlist(false);
     setSearchProfile(profile);
+    filters =
+      profile.preference.category === "Resale HDB"
+        ? undefined
+        : (filters ?? marketFiltersSchema.parse({}));
     setMarketFilters(filters);
     setDiscovery(null);
-    if (profile.preference.category !== "Resale HDB" && !filters) {
-      navigate("explore");
-      return;
-    }
     navigate("results");
     searchActive.current = true;
     setSearchRetryAt(0);
@@ -1242,6 +1245,10 @@ export function HomeMatch({
                 onNew={newProfile}
                 onEdit={editProfile}
                 onFind={(p) => findAreas(p)}
+                onExplore={(p) => {
+                  setSearchProfile(p);
+                  navigate("explore");
+                }}
                 onDelete={(p) => setDeleteTarget(p)}
                 onOpenHistory={(id) => openDiscovery(id)}
                 onClearHistory={clearRecentSearches}
@@ -1261,11 +1268,7 @@ export function HomeMatch({
                 preview={preview}
                 busy={busy}
                 canSearch={Boolean(active?.confirmed)}
-                searchLabel={
-                  active?.preference.category === "Resale HDB"
-                    ? "Find matching areas"
-                    : "Explore areas"
-                }
+                searchLabel="Find matching areas"
                 onEdit={() => navigate("edit")}
                 onSearch={() => {
                   if (active) findAreas(active);

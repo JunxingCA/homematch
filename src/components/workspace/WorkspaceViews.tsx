@@ -219,6 +219,7 @@ export function ProfilesView({
   onNew,
   onEdit,
   onFind,
+  onExplore,
   onDelete,
   onOpenHistory,
   onClearHistory,
@@ -235,6 +236,7 @@ export function ProfilesView({
   onNew: () => void;
   onEdit: (profile: Profile) => void;
   onFind: (profile: Profile) => void;
+  onExplore: (profile: Profile) => void;
   onDelete: (profile: Profile) => void;
   onOpenHistory: (id: string) => void;
   onClearHistory: () => void;
@@ -310,10 +312,19 @@ export function ProfilesView({
                     onClick={() => onFind(p)}
                   >
                     <Search aria-hidden="true" size={16} />
-                    {p.preference.category === "Resale HDB"
-                      ? "Find matching areas"
-                      : "Explore areas"}
+                    Find matching areas
                   </button>
+                  {p.preference.category !== "Resale HDB" && (
+                    <button
+                      type="button"
+                      className="btn btn--ghost btn--small"
+                      disabled={busy}
+                      onClick={() => onExplore(p)}
+                    >
+                      <Search aria-hidden="true" size={16} />
+                      Explore without ranking
+                    </button>
+                  )}
                   <button
                     type="button"
                     className="btn btn--ghost btn--small"
