@@ -1,6 +1,6 @@
 # BTO and Private-Housing Price Ranking
 
-Implemented locally as a separate market-evidence path. Resale HDB continues to
+Implemented as a separate market-evidence path. Resale HDB continues to
 use `hdb-town-v1`; its evidence and historical saved results are not relabelled.
 
 ## Scope and Status
@@ -13,9 +13,9 @@ use `hdb-town-v1`; its evidence and historical saved results are not relabelled.
   These are labelled as town proxies, not project entrances. This is a limitation
   for comparing projects in the same town, not a completed project-level map.
 - Private ranking is implemented for URA postal districts, with separate
-  apartments/condominiums and landed-type samples. The URA access key is not yet
-  supplied, so real private-price acceptance is pending. No fixture prices are
-  substituted into the application when a provider is missing.
+  apartments/condominiums and landed-type samples. The first real four-batch URA
+  snapshot was validated, published and read back on 31 October 2026. No fixture
+  prices are substituted into the application when a provider is missing.
 - No asking-price feed, available-unit inventory, property valuation, grant amount,
   eligibility assessment, financial advice or application success prediction.
 
@@ -70,7 +70,46 @@ and verified project coordinates; it is not already an automated HDB listing fee
 
 No URA key is passed to the browser or required by Vercel for ordinary searches:
 the separate importer needs it; the deployed app reads validated published data.
-No URA import or scheduled refresh has yet run against a real access key.
+The real access key is configured only for the importer; it was not copied to
+Vercel. A recurring URA refresh is not configured. Re-run the publish command
+within seven days, otherwise the freshness guard deliberately blocks new private
+rankings. Existing saved evidence is unchanged.
+
+### First Live Import on 31 October 2026
+
+- Snapshot: `ura-2026-10-31-f62bb245ae1058d3962d`.
+- 3,318 project records; 101,966 accepted single-unit transactions through October
+  2026. This includes 80,147 apartment/condominium transactions and 10,423 landed
+  transactions. The remaining 11,396 Executive Condominium transactions are
+  retained as source evidence but excluded from the current ranking categories.
+- 29,325 source records without usable project coordinates and 48 bulk-sale
+  records were excluded and counted. These exclusions mean coverage is partial;
+  an omitted transaction must not be interpreted as no sale in that location.
+- The live provider uses `Strata Semi-detached`, while its documentation and our
+  internal category use `Strata Semidetached`. The normaliser accepts both and
+  preserves one canonical category. Unknown categories still fail validation.
+- The full JSON is 13,657,998 bytes. Inline Data API insertion exceeded the
+  database statement timeout, so the backend-only publisher stores a lossless
+  gzip/base64 envelope (1,246,788 bytes) with the original size and SHA-256 digest.
+  The reader checks its checksum, identity, schema and a 32 MB decompression bound
+  before using it. Legacy uncompressed snapshots remain readable.
+- The import RPC is `SECURITY INVOKER`, executable only by `service_role`, and
+  never overwrites an existing snapshot. Its 60-second function timeout does not
+  change global or ordinary user-role timeouts. No user table policies changed.
+- The published snapshot was retrieved and decoded back to the exact validated
+  source object. An optional real-import test verifies district samples for both
+  condo and landed categories. OneMap journeys are not fabricated by this test;
+  end-to-end hosted ranking still needs a valid signed-in profile and live routes.
+- URA data is historical transaction evidence, not current listings or valuations.
+  The full result continues to use complete months within the selected lookback.
+
+Run the optional local price-evidence acceptance test after an import:
+
+```sh
+npx vitest run --config vitest.live.config.ts tests/live/ura-import.test.ts
+```
+
+Source field definitions: https://eservice.ura.gov.sg/maps/api/
 
 ## Private Price Formula and Filters
 

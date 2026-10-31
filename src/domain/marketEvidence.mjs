@@ -184,7 +184,11 @@ export function normaliseUra(batches, fetchedAt, id) {
         const record = transaction.parse({
           month: `20${row.contractDate.slice(2)}-${row.contractDate.slice(0, 2)}`,
           district: row.district,
-          propertyType: row.propertyType,
+          // Live URA uses a hyphenated label; retain the documented internal category.
+          propertyType:
+            row.propertyType === "Strata Semi-detached"
+              ? "Strata Semidetached"
+              : row.propertyType,
           price: Number(row.price),
           areaSqm: Number(row.area),
           areaType: row.typeOfArea,

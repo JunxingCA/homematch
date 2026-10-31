@@ -61,7 +61,8 @@ acceptance. See VERCEL_DEPLOYMENT.md for the actual production release.
 - [x] Record owner-reported manual success for account deletion, password reset and installation, without claiming independently repeated device tests.
 - [x] Prepare TEAM_HANDOVER_LAB3.md with design boundaries, testing/setup steps, demo order, task ownership and exact Lab 3 deliverables.
 - [x] Complete private GitHub source push, canonical domain release and hosted smoke checks; application commit `68c03d8`, deployment `dpl_G6C5hLqmm6GvXPXeXn6vKvgjo1By`. Authenticated end-to-end acceptance on the new hostname remains separate.
-- [ ] Obtain URA_ACCESS_KEY, import real private prices and verify district/type/size samples against URA; this external connection is not complete.
+- [x] Obtain URA_ACCESS_KEY and validate/publish all four real URA batches on 31 October 2026; independently verify condo/landed district samples and exact stored-data readback. See MARKET_RANKING.md for counts, exclusions and compressed storage.
+- [ ] Configure recurring URA refresh; the current seven-day source freshness guard remains active. Complete signed-in hosted ranking acceptance when OneMap routing permits it.
 - [ ] Configure Apple Developer/Supabase provider and validate real Apple sign-in; currently deliberately disabled.
 - [ ] Expand BTO beyond the archived June catalogue, verify individual project coordinates and automate launch-source maintenance; not a complete live BTO inventory.
 

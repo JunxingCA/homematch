@@ -4,6 +4,7 @@ import { pathToFileURL } from "node:url";
 import { createClient } from "@supabase/supabase-js";
 import { normaliseUra } from "../src/domain/marketEvidence.mjs";
 import { boundedText } from "./lib/providerDownload.mjs";
+import { encodePrivateSnapshot } from "../src/server/providers/privateSnapshotStorage.mjs";
 
 export async function collectPrivate({
   accessKey,
@@ -73,14 +74,16 @@ export async function main(args = process.argv.slice(2)) {
         auth: { persistSession: false, autoRefreshToken: false },
         global: {
           fetch: (input, init) =>
-            fetch(input, { ...init, signal: AbortSignal.timeout(30000) }),
+            // Whole five-year snapshots can exceed 10 MB; this is an offline bulk import.
+            fetch(input, { ...init, signal: AbortSignal.timeout(120000) }),
         },
       },
     );
-    const { error } = await client
-      .from("market_price_snapshots")
-      .insert({ id: snapshot.id, kind: "private", payload: snapshot });
-    if (error && error.code !== "23505")
+    const { error } = await client.rpc("publish_private_snapshot", {
+      p_id: snapshot.id,
+      p_payload: encodePrivateSnapshot(snapshot),
+    });
+    if (error)
       throw Error(
         "Snapshot publication failed. The previous published snapshot is unchanged.",
       );

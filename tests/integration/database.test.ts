@@ -70,6 +70,18 @@ beforeAll(async () => {
       "utf8",
     ),
   );
+  await db.exec(
+    await readFile(
+      "supabase/migrations/20261031093012_publish_private_snapshot.sql",
+      "utf8",
+    ),
+  );
+  await db.exec(
+    await readFile(
+      "supabase/migrations/20261031093520_compressed_private_snapshots.sql",
+      "utf8",
+    ),
+  );
 });
 beforeEach(async () => {
   await db.exec(
@@ -86,6 +98,42 @@ afterAll(async () => {
 });
 
 describe("real PostgreSQL migration and RLS (PGlite)", () => {
+  it("limits the bulk publisher to the backend and never overwrites immutable evidence", async () => {
+    const payload = {
+      id: "ura-test",
+      kind: "private",
+      version: 1,
+      batches: [1, 2, 3, 4],
+      projects: [{}],
+    };
+    const publish = (value = payload) =>
+      db.query("select public.publish_private_snapshot($1,$2::jsonb)", [
+        "ura-test",
+        JSON.stringify(value),
+      ]);
+    await expect(publish()).rejects.toThrow(/permission denied/);
+    await db.exec("reset role; set role anon");
+    await expect(publish()).rejects.toThrow(/permission denied/);
+    await db.exec("reset role; set role service_role");
+    await expect(publish({ ...payload, projects: [] })).rejects.toThrow(
+      "INVALID_PRIVATE_SNAPSHOT",
+    );
+    await publish();
+    await publish();
+    await expect(
+      publish({ ...payload, projects: [{ changed: true }] }),
+    ).rejects.toThrow("PRIVATE_SNAPSHOT_CONFLICT");
+    expect(
+      (
+        await db.query(
+          "select payload from public.market_price_snapshots where id='ura-test'",
+        )
+      ).rows,
+    ).toEqual([{ payload }]);
+    await db.exec(
+      "reset role; delete from public.market_price_snapshots where id='ura-test'",
+    );
+  });
   it("reserves immutable market snapshot imports for the backend", async () => {
     await expect(
       db.query("select * from public.market_price_snapshots"),

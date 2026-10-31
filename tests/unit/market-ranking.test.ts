@@ -80,6 +80,28 @@ const privateSnapshot = () =>
   );
 
 describe("separate BTO and private pricing evidence", () => {
+  it("normalises the live URA hyphenated strata semi-detached label for landed ranking", () => {
+    for (const label of ["Strata Semi-detached", "Strata Semidetached"]) {
+      const snapshot = normaliseUra(
+        batches(Array.from({ length: 5 }, () => raw({ propertyType: label }))),
+        "2026-10-14T00:00:00.000Z",
+        "strata-alias",
+      );
+      expect(
+        snapshot.projects[0].transactions.every(
+          (t) => t.propertyType === "Strata Semidetached",
+        ),
+      ).toBe(true);
+      const candidates = privateCandidates(
+        snapshot,
+        { ...preference, category: "Private / landed" },
+        marketFiltersSchema.parse({}),
+        { fromMonth: "2026-01", toMonthExclusive: "2026-10" },
+      );
+      expect(candidates.candidates).toHaveLength(1);
+      expect(candidates.candidates[0].prices).toHaveLength(5);
+    }
+  });
   it("validates seven real June launch projects without pretending they are open", () => {
     expect(catalogue.projects).toHaveLength(7);
     const closed = btoCandidates(

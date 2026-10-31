@@ -7,6 +7,7 @@ import {
 } from "@/domain/marketEvidence.mjs";
 import { adminClient } from "../supabase";
 import { AppError } from "../http";
+import { decodePrivateSnapshot } from "../providers/privateSnapshotStorage.mjs";
 
 export class MarketPriceAdapter {
   bto() {
@@ -41,13 +42,14 @@ export class MarketPriceAdapter {
         "Verified URA prices are not connected yet. Area exploration is still available.",
         503,
       );
-    const parsed = privateSnapshotSchema.safeParse(data.payload);
-    if (!parsed.success)
+    try {
+      return decodePrivateSnapshot(data.payload);
+    } catch {
       throw new AppError(
         "PRIVATE_DATA_INVALID",
         "The URA snapshot could not be validated. Please retry after a data refresh.",
         503,
       );
-    return parsed.data;
+    }
   }
 }
