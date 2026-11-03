@@ -114,23 +114,6 @@
   outline: 3px solid var(--text);
   outline-offset: 3px;
 }
-.tileError {
-  position: absolute;
-  bottom: 100px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 900;
-  padding: 12px;
-  max-width: calc(100% - 100px);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: var(--card);
-  border: 1.5px solid var(--edge);
-  border-radius: 16px;
-  font-size: 13px;
-  font-weight: 600;
-}
 .map :global(.leaflet-control-attribution) {
   background: var(--panel);
   color: var(--muted);
@@ -164,13 +147,5 @@
   .navigation {
     top: 12px;
     right: 12px;
-  }
-  .tileError {
-    top: 12px;
-    bottom: auto;
-    left: 12px;
-    transform: none;
-    max-width: calc(100% - 80px);
-    flex-wrap: wrap;
   }
 }

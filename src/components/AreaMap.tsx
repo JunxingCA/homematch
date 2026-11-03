@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import {
   Circle,
   CircleMarker,
@@ -9,10 +9,9 @@ import {
   TileLayer,
   Tooltip,
   useMap,
-  useMapEvents,
 } from "react-leaflet";
-import { divIcon, type TileLayer as LeafletTileLayer } from "leaflet";
-import { LocateFixed, Maximize, Minus, Plus, RefreshCw } from "lucide-react";
+import { divIcon } from "leaflet";
+import { LocateFixed, Maximize, Minus, Plus } from "lucide-react";
 import type { Area, RouteEvidence } from "@/domain/recommendations";
 import type { Preference } from "@/domain/preferences";
 import "leaflet/dist/leaflet.css";
@@ -131,44 +130,10 @@ function View({
   );
 }
 
-type TileStatus = "partial" | "unavailable" | null;
-function Basemap({
-  theme,
-  onStatus,
-}: {
-  theme: "light" | "dark";
-  onStatus: (status: TileStatus) => void;
-}) {
-  const map = useMap();
-  const layer = useRef<LeafletTileLayer>(null);
-  const checkTiles = useCallback(() => {
-    const bounds = map.getContainer().getBoundingClientRect();
-    if (!bounds.width || !bounds.height) return;
-    const images = Array.from(
-      layer.current?.getContainer()?.querySelectorAll("img") ?? [],
-    ).filter((image) => {
-      const rect = image.getBoundingClientRect();
-      return (
-        rect.right > bounds.left &&
-        rect.left < bounds.right &&
-        rect.bottom > bounds.top &&
-        rect.top < bounds.bottom
-      );
-    });
-    // Only current, settled viewport tiles count; an old failure must not poison the layer.
-    const failed = images.filter(
-      (image) => image.complete && !image.naturalWidth,
-    ).length;
-    const loaded = images.some(
-      (image) => image.complete && image.naturalWidth > 0,
-    );
-    onStatus(failed ? (loaded ? "partial" : "unavailable") : null);
-  }, [map, onStatus]);
-  useMapEvents({ moveend: checkTiles, resize: checkTiles });
+function Basemap({ theme }: { theme: "light" | "dark" }) {
   return (
     <>
       <TileLayer
-        ref={layer}
         bounds={[
           [1.144, 103.535],
           [1.494, 104.502],
@@ -178,11 +143,6 @@ function Basemap({
         attribution={
           '<a href="https://www.onemap.gov.sg/" target="_blank" rel="noopener noreferrer">OneMap</a> &copy; contributors | <a href="https://www.sla.gov.sg/" target="_blank" rel="noopener noreferrer">Singapore Land Authority</a>'
         }
-        eventHandlers={{
-          loading: () => onStatus(null),
-          tileerror: checkTiles,
-          load: checkTiles,
-        }}
       />
     </>
   );
@@ -213,8 +173,6 @@ export default function AreaMap({
   browsing: MapFacilities | null;
   browseRadius: number;
 }) {
-  const [tileRevision, setTileRevision] = useState(0);
-  const [tileStatus, setTileStatus] = useState<TileStatus>(null);
   const result = discovery.results.find((r) => r.area.id === selected);
   return (
     <div
@@ -224,23 +182,6 @@ export default function AreaMap({
         markerMode === "area" ? "Area exploration map" : "Recommended areas map"
       }
     >
-      {tileStatus && (
-        <div role="status" className={styles.tileError}>
-          <span>
-            {tileStatus === "partial"
-              ? "Some OneMap tiles could not load. Area evidence is still accessible."
-              : "OneMap tiles unavailable. Area evidence is still accessible."}
-          </span>
-          <button
-            onClick={() => {
-              setTileStatus(null);
-              setTileRevision((n) => n + 1);
-            }}
-          >
-            <RefreshCw /> Retry map
-          </button>
-        </div>
-      )}
       <MapContainer
         center={[1.35, 103.82]}
         zoom={11}
@@ -249,11 +190,7 @@ export default function AreaMap({
         zoomControl={false}
         className={styles.map}
       >
-        <Basemap
-          key={`${theme}:${tileRevision}`}
-          theme={theme}
-          onStatus={setTileStatus}
-        />
+        <Basemap key={theme} theme={theme} />
         <View
           discovery={discovery}
           selected={selected}

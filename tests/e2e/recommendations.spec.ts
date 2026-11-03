@@ -601,7 +601,7 @@ for (const code of ["DISCOVERY_BUSY", "ONEMAP_RATE_LIMIT"]) {
   });
 }
 
-test("map focuses the first match and tile warnings recover after navigating to healthy tiles", async ({
+test("map focuses the first match and tile failures never display a warning", async ({
   page,
 }) => {
   const tile = await readFile("public/pwa/favicon-32.png");
@@ -644,12 +644,13 @@ test("map focuses the first match and tile warnings recover after navigating to 
     page.getByText(
       "OneMap tiles unavailable. Area evidence is still accessible.",
     ),
-  ).toBeVisible();
+  ).toHaveCount(0);
   await expect(
     page.getByRole("region", { name: "Area evidence" }),
   ).toContainText("Jurong East MRT");
   failures = "none";
-  await page.getByRole("button", { name: "Retry map", exact: true }).click();
+  await page.getByRole("button", { name: "Switch to light mode" }).click();
+  await page.getByRole("button", { name: "Switch to dark mode" }).click();
   await expect(
     page.locator('.leaflet-tile-loaded[src*="/Night/15/"]').first(),
   ).toBeVisible();
@@ -659,10 +660,13 @@ test("map focuses the first match and tile warnings recover after navigating to 
   failures = "one";
   await page.getByRole("button", { name: "Zoom in", exact: true }).click();
   await expect(
+    page.locator('.leaflet-tile-loaded[src*="/Night/16/"]').first(),
+  ).toBeVisible();
+  await expect(
     page.getByText(
       "Some OneMap tiles could not load. Area evidence is still accessible.",
     ),
-  ).toBeVisible();
+  ).toHaveCount(0);
   // A fresh viewport clears the earlier failure without remounting/retrying the layer.
   await expect(page.locator(".leaflet-zoom-anim")).toHaveCount(0);
   await page.getByRole("button", { name: "Zoom in", exact: true }).click();
@@ -687,7 +691,7 @@ test("map focuses the first match and tile warnings recover after navigating to 
     page.getByRole("region", { name: "Area evidence" }),
   ).toContainText("Bedok MRT");
   await expect(
-    page.locator('.leaflet-tile-loaded[src*="/Night/15/"]').first(),
+    page.locator('.leaflet-tile-loaded[src*="/Night/"]').first(),
   ).toBeVisible();
 });
 
@@ -858,12 +862,13 @@ test("map workspace filters, layers, keyboard pins and view state", async ({
     page.getByText(
       /(?:OneMap tiles unavailable|Some OneMap tiles could not load)\. Area evidence is still accessible\./,
     ),
-  ).toBeVisible();
+  ).toHaveCount(0);
   await expect(
     page.getByRole("region", { name: "Area evidence" }),
   ).toContainText("Bedok MRT");
   await page.unroute("**/maps/tiles/**");
-  await page.getByRole("button", { name: "Retry map", exact: true }).click();
+  await page.getByRole("button", { name: "Switch to light mode" }).click();
+  await page.getByRole("button", { name: "Switch to dark mode" }).click();
   await expect(
     page.locator('.leaflet-tile-loaded[src*="Night"]').first(),
   ).toBeVisible();
