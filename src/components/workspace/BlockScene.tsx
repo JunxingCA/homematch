@@ -17,6 +17,7 @@ const WINDOW_TONES = Array.from({ length: ROWS * COLS }, () =>
  * train runs when any trip is by public transport.
  */
 export function BlockScene({ preference }: { preference: Preference }) {
+  const landed = preference.category === "Private / landed";
   const scale = BUDGET_SCALE[preference.category];
   const share = Math.min(
     1,
@@ -24,6 +25,7 @@ export function BlockScene({ preference }: { preference: Preference }) {
   );
   const floorIdx = Math.min(ROWS - 1, Math.floor(share * ROWS));
   const myRow = ROWS - 1 - floorIdx;
+  const houseWindow = Math.min(4, Math.floor(share * 5));
   const level = String((floorIdx + 1) * 3 + 2).padStart(2, "0");
   const trips = preference.destinations.filter(
     (d) => d.location || d.query.trim(),
@@ -35,14 +37,14 @@ export function BlockScene({ preference }: { preference: Preference }) {
 
   return (
     <div
-      className={styles.scene}
+      className={`${styles.scene} ${landed ? styles.landedScene : ""}`}
       role="img"
-      aria-label={`Your block: level ${level}, ${preference.lifestyles.length} amenities within reach, ${trips.length} weekly places`}
+      aria-label={`${landed ? "Your landed home" : `Your block: level ${level}`}, ${preference.lifestyles.length} amenities within reach, ${trips.length} weekly places`}
     >
       <div className={styles.topChips}>
         <span className="chip chip--dark">
           <span className="dot" />
-          Level {level}
+          {landed ? "Your home" : `Level ${level}`}
         </span>
         <span className="chip chip--dark">
           <span className="dot" style={{ background: "var(--mint)" }} />
@@ -51,18 +53,45 @@ export function BlockScene({ preference }: { preference: Preference }) {
       </div>
       <div className={styles.sun} />
 
-      <div className={styles.block}>
-        {WINDOW_TONES.map((tone, i) => {
-          const mine = Math.floor(i / COLS) === myRow && i % COLS === 2;
-          return (
-            <span
-              key={i}
-              className={mine ? styles.mine : undefined}
-              style={{ background: mine ? "var(--coral)" : tone }}
-            />
-          );
-        })}
-      </div>
+      {landed ? (
+        <div className={styles.house} aria-hidden="true">
+          <div className={styles.chimney} />
+          <div className={styles.roof} />
+          <div className={styles.houseWall}>
+            <div className={styles.houseWindows}>
+              {Array.from({ length: 5 }, (_, i) => (
+                <span
+                  key={i}
+                  className={i === houseWindow ? styles.mine : undefined}
+                  style={{
+                    background:
+                      i === houseWindow ? "var(--coral)" : WINDOW_TONES[i],
+                  }}
+                />
+              ))}
+            </div>
+            <div className={styles.frontDoor}>
+              <span />
+            </div>
+          </div>
+          <div className={styles.doorstep} />
+          <div className={styles.hedge} />
+          <div className={styles.gardenPath} />
+        </div>
+      ) : (
+        <div className={styles.block}>
+          {WINDOW_TONES.map((tone, i) => {
+            const mine = Math.floor(i / COLS) === myRow && i % COLS === 2;
+            return (
+              <span
+                key={i}
+                className={mine ? styles.mine : undefined}
+                style={{ background: mine ? "var(--coral)" : tone }}
+              />
+            );
+          })}
+        </div>
+      )}
 
       <div className={styles.trips}>
         {trips.map((d, i) => (

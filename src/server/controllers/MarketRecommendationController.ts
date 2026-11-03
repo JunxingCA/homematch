@@ -197,7 +197,7 @@ export class MarketRecommendationController {
           filters: query.filters,
           coverage:
             market.kind === "bto"
-              ? "Published 99-year-lease indicative ranges before grants, not available units. Two-room Flexi sizes are combined; 3Gen/short leases are excluded. Town MRT proxies are used, not project entrances. Closed launches require an explicit historical-research option. Budget score measures range coverage, not a probability or share of flats."
+              ? "Published 99-year-lease indicative ranges before grants, not available units. Two-room Flexi sizes are combined; 3Gen/short leases are excluded. Town MRT proxies are used, not project entrances. Closed launches included in simulation remain closed for application. Budget score measures range coverage, not a probability or share of flats."
               : `URA single-unit sales grouped by postal district, not individual listings. Apartment/Condominium and landed categories are separate; Executive Condominiums are excluded. HDB room types are not private bedroom counts and are not used. Unknown coordinates excluded: ${market.skippedCoordinates}; multi-unit transactions excluded: ${market.skippedMultiUnit}. Origins are means of matching project locations. Historical prices are not asking prices or valuations.`,
         },
       };

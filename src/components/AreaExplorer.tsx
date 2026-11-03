@@ -92,7 +92,9 @@ export function AreaExplorer({
   onRank: (filters: MarketFilters) => void;
 }) {
   const [filters, setFilters] = useState<MarketFilters>(() =>
-    marketFiltersSchema.parse({}),
+    marketFiltersSchema.parse({
+      includeClosedLaunches: profile.preference.category === "BTO",
+    }),
   );
   const [filterError, setFilterError] = useState("");
   const [catalogue, setCatalogue] = useState<ExplorationCatalogue | null>(null);
@@ -287,11 +289,12 @@ export function AreaExplorer({
                   })
                 }
               />
-              Include closed launches for historical research
+              Simulate matching with closed BTO launches
             </label>
             <p>
-              Source catalogue: June 2026. Applications closed 24 June. Prices
-              before grants; town reference points, not project entrances.
+              Simulation only: June 2026 applications closed on 24 June. These
+              projects are not currently open for application. Prices before
+              grants; town reference points, not project entrances.
             </p>
           </>
         ) : (
@@ -323,7 +326,7 @@ export function AreaExplorer({
             <label>
               Area basis
               <select
-                  aria-label="Area basis"
+                aria-label="Area basis"
                 value={filters.areaType}
                 onChange={(e) =>
                   setFilters({
@@ -340,7 +343,7 @@ export function AreaExplorer({
             <label>
               Sale type
               <select
-                  aria-label="Sale type"
+                aria-label="Sale type"
                 value={filters.saleType}
                 onChange={(e) =>
                   setFilters({

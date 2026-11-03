@@ -556,7 +556,10 @@ export function HomeMatch({
     filters =
       profile.preference.category === "Resale HDB"
         ? undefined
-        : (filters ?? marketFiltersSchema.parse({}));
+        : (filters ??
+          marketFiltersSchema.parse({
+            includeClosedLaunches: profile.preference.category === "BTO",
+          }));
     setMarketFilters(filters);
     setDiscovery(null);
     navigate("results");

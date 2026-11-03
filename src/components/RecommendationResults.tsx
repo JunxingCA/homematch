@@ -233,6 +233,14 @@ export function RecommendationResults({
       </div>
       {discovery.market && (
         <p className={styles.marketNotice} role="note">
+          {discovery.market.kind === "bto" &&
+            discovery.market.filters.includeClosedLaunches && (
+              <>
+                <strong>BTO simulation</strong> Matching uses a past launch as a
+                demonstration. Applications have closed; these results do not
+                represent flats currently open for application.{" "}
+              </>
+            )}
           {discovery.market.coverage}
         </p>
       )}
@@ -255,7 +263,7 @@ export function RecommendationResults({
                 <p>
                   No areas have enough evidence.{" "}
                   {discovery.market?.kind === "bto"
-                    ? "No projects in the imported catalogue match the launch status and selected flat types. Closed launches require the historical-research option in Explore areas."
+                    ? "No projects match the selected flat types and launch settings. Adjust your profile, or enable the closed-launch simulation in Explore without ranking."
                     : "Try a longer lookback or broader size filters. Each area needs at least five matching transactions."}
                 </p>
                 {discovery.excluded.length > 0 && (

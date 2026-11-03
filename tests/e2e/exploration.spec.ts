@@ -196,6 +196,27 @@ async function fixture(
   ).toContainText("Bedok MRT");
   return Object.assign(counters, { profile });
 }
+test("landed planner uses a house instead of a flat block", async ({
+  page,
+}, info) => {
+  await fixture(page, "Private / landed");
+  await page.getByRole("button", { name: /My profiles 1/ }).click();
+  await page.getByRole("button", { name: "Edit profile", exact: true }).click();
+  const scene = page.getByRole("img", { name: /^Your landed home,/ });
+  await expect(scene).toBeVisible();
+  await expect(scene.getByText("Your home", { exact: true })).toBeVisible();
+  await expect(scene.getByText(/^Level /)).toHaveCount(0);
+  await scene.screenshot({
+    path: `test-results/landed-house-${info.project.name}.png`,
+  });
+  const maximum = page.getByRole("slider", { name: "Maximum budget slider" });
+  await maximum.focus();
+  await maximum.press("End");
+  await expect(
+    scene.locator('[class*="houseWindows"] > span').nth(4),
+  ).toHaveClass(/mine/);
+  await expect(scene.getByText(/^Level /)).toHaveCount(0);
+});
 test("BTO ranking preserves quoted-price labels, sources, comparison and independent map layers", async ({
   page,
 }, info) => {
@@ -290,9 +311,7 @@ test("BTO ranking preserves quoted-price labels, sources, comparison and indepen
       });
     },
   );
-  await page
-    .getByLabel("Include closed launches for historical research")
-    .check();
+  await page.getByLabel("Simulate matching with closed BTO launches").check();
   await page
     .getByRole("button", { name: "Rank BTO launch areas", exact: true })
     .click();
@@ -307,6 +326,8 @@ test("BTO ranking preserves quoted-price labels, sources, comparison and indepen
     detail.getByRole("heading", { name: "Historical budget fit", exact: true }),
   ).toHaveCount(0);
   await expect(page.getByRole("note")).toContainText("Applications closed");
+  await expect(page.getByRole("note")).toContainText("BTO simulation");
+  await expect(page.getByRole("note")).toContainText("do not represent flats currently open for application");
   await expect(page.locator(".leaflet-tile-loaded").first()).toBeVisible({
     timeout: 15000,
   });
@@ -392,7 +413,7 @@ for (const category of ["BTO", "Condominium", "Private / landed"] as const) {
         profileId: profile.id,
         revision: profile.revision,
         filters: {
-          includeClosedLaunches: false,
+          includeClosedLaunches: category === "BTO",
           minAreaSqm: 0,
           maxAreaSqm: 20000,
           areaType: "Any",

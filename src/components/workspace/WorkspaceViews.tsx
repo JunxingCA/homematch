@@ -304,6 +304,11 @@ export function ProfilesView({
                   {p.preference.category} · {money(p.preference.budgetMin)} -{" "}
                   {money(p.preference.budgetMax)}
                 </p>
+                {p.preference.category === "BTO" && (
+                  <p className={styles.small}>
+                    BTO simulation: past launch, applications closed.
+                  </p>
+                )}
                 <div className={styles.profileActions}>
                   <button
                     type="button"

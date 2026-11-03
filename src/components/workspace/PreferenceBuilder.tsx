@@ -537,7 +537,9 @@ export function PreferenceBuilder({
               <div className={styles.slider}>
                 <span className="chip" style={{ alignSelf: "flex-start" }}>
                   <span className="dot" />
-                  Highest · higher budget, higher floor
+                  {preference.category === "Private / landed"
+                    ? "Highest"
+                    : "Highest · higher budget, higher floor"}
                 </span>
                 <input
                   type="range"
