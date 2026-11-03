@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const config: NextConfig = {
+  experimental: { agentUpgrade: "security" },
   devIndicators: false,
   poweredByHeader: false,
   async redirects() {
