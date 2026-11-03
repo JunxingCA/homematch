@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { DismissibleNotice } from "./DismissibleNotice";
 import dynamic from "next/dynamic";
 import {
   ArrowLeft,
@@ -232,7 +233,7 @@ export function RecommendationResults({
         </div>
       </div>
       {discovery.market && (
-        <p className={styles.marketNotice} role="note">
+        <DismissibleNotice key={discovery.id} className={styles.marketNotice}>
           {discovery.market.kind === "bto" &&
             discovery.market.filters.includeClosedLaunches && (
               <>
@@ -242,7 +243,7 @@ export function RecommendationResults({
               </>
             )}
           {discovery.market.coverage}
-        </p>
+        </DismissibleNotice>
       )}
       {reveal && (
         <MatchReveal discovery={discovery} onDone={() => setReveal(false)} />

@@ -1,0 +1,28 @@
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.content {
+  flex: 1;
+  min-width: 0;
+}
+.close {
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.close:hover {
+  background: #00000012;
+}
+.close:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}

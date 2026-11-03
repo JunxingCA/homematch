@@ -280,21 +280,37 @@ export function ProfilesView({
             {profiles.map((p) => (
               <article className={styles.profile} key={p.id}>
                 <div className={styles.profileTop}>
-                  <span className={styles.miniBlock} aria-hidden="true">
-                    {Array.from({ length: 9 }, (_, i) => (
-                      <i
-                        key={i}
-                        style={{
-                          background:
-                            i === 4
-                              ? "var(--coral)"
-                              : i % 3 === 0
-                                ? "var(--amber)"
-                                : "#7E9C8B",
-                        }}
-                      />
-                    ))}
-                  </span>
+                  {p.preference.category === "Private / landed" ? (
+                    <span
+                      className={styles.miniHouse}
+                      role="img"
+                      aria-label="Landed house"
+                    >
+                      <span className={styles.miniRoof} />
+                      <span className={styles.miniWall}>
+                        <i />
+                        <i />
+                        <i />
+                        <span className={styles.miniDoor} />
+                      </span>
+                    </span>
+                  ) : (
+                    <span className={styles.miniBlock} aria-hidden="true">
+                      {Array.from({ length: 9 }, (_, i) => (
+                        <i
+                          key={i}
+                          style={{
+                            background:
+                              i === 4
+                                ? "var(--coral)"
+                                : i % 3 === 0
+                                  ? "var(--amber)"
+                                  : "#7E9C8B",
+                          }}
+                        />
+                      ))}
+                    </span>
+                  )}
                   <span className={`tag ${p.confirmed ? "" : styles.draft}`}>
                     {p.confirmed ? "Confirmed" : "Draft"}
                   </span>

@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { DismissibleNotice } from "./DismissibleNotice";
 import dynamic from "next/dynamic";
 import {
   ArrowLeft,
@@ -253,7 +254,10 @@ export function AreaExplorer({
           </p>
         </div>
       </header>
-      <div className={styles.scope}>
+      <DismissibleNotice
+        key={`${profile.id}:${profile.revision}`}
+        className={styles.scope}
+      >
         <strong>Neighbourhood context only</strong>
         <p>
           {catalogue?.areas.length ?? "Imported"} town-level MRT reference
@@ -261,7 +265,7 @@ export function AreaExplorer({
           not filter or rank this view. No price, eligibility or availability
           assessment.
         </p>
-      </div>
+      </DismissibleNotice>
       <form
         className={styles.rankingFilters}
         aria-label="Price ranking filters"

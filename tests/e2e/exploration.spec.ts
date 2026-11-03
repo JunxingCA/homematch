@@ -201,6 +201,9 @@ test("landed planner uses a house instead of a flat block", async ({
 }, info) => {
   await fixture(page, "Private / landed");
   await page.getByRole("button", { name: /My profiles 1/ }).click();
+  await expect(
+    page.getByRole("img", { name: "Landed house", exact: true }),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Edit profile", exact: true }).click();
   const scene = page.getByRole("img", { name: /^Your landed home,/ });
   await expect(scene).toBeVisible();
@@ -327,7 +330,9 @@ test("BTO ranking preserves quoted-price labels, sources, comparison and indepen
   ).toHaveCount(0);
   await expect(page.getByRole("note")).toContainText("Applications closed");
   await expect(page.getByRole("note")).toContainText("BTO simulation");
-  await expect(page.getByRole("note")).toContainText("do not represent flats currently open for application");
+  await expect(page.getByRole("note")).toContainText(
+    "do not represent flats currently open for application",
+  );
   await expect(page.locator(".leaflet-tile-loaded").first()).toBeVisible({
     timeout: 15000,
   });
@@ -335,6 +340,10 @@ test("BTO ranking preserves quoted-price labels, sources, comparison and indepen
     path: `test-results/bto-ranking-${info.project.name}-dark.png`,
     fullPage: true,
   });
+  await page
+    .getByRole("button", { name: "Dismiss housing notice", exact: true })
+    .click();
+  await expect(page.getByRole("note")).toHaveCount(0);
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,
@@ -353,6 +362,10 @@ test("BTO ranking preserves quoted-price labels, sources, comparison and indepen
   await expect(comparison).toContainText("Not transaction data");
   await expect(comparison).toContainText("Published price range");
   await expect(comparison).not.toContainText("Median resale price");
+  await page
+    .getByTitle("Recalculate with current evidence", { exact: true })
+    .click();
+  await expect(page.getByRole("note")).toContainText("BTO simulation");
 });
 test("private ranking submits category-specific size filters and handles an unconnected URA source", async ({
   page,
@@ -402,6 +415,27 @@ test("private ranking submits category-specific size filters and handles an unco
   ).toBeVisible();
 });
 for (const category of ["BTO", "Condominium", "Private / landed"] as const) {
+  test(`${category}: exploration notice can be dismissed and resets on reopening`, async ({
+    page,
+  }) => {
+    await fixture(page, category);
+    await page
+      .getByRole("button", { name: "Dismiss housing notice", exact: true })
+      .click();
+    await expect(
+      page.getByText("Neighbourhood context only", { exact: true }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("region", { name: "Exploration area details" }),
+    ).toBeVisible();
+    await page.getByRole("button", { name: /My profiles 1/ }).click();
+    await page
+      .getByRole("button", { name: "Explore without ranking", exact: true })
+      .click();
+    await expect(
+      page.getByText("Neighbourhood context only", { exact: true }),
+    ).toBeVisible();
+  });
   test(`${category}: primary profile action ranks directly with default market filters`, async ({
     page,
   }) => {
